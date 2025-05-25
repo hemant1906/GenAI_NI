@@ -101,3 +101,4 @@ if __name__ == '__main__':
         commit_message='Add image summary from Claude Sonnet',
         github_token=github_token
     )
+# Note: Replace 'your_anthropic_api_key_here' with your actual Anthropic API key.
