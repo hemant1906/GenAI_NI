@@ -63,6 +63,6 @@ if __name__ == '__main__':
         repo_name='GenAI',
         file_path=summary_filename,
         commit_message='Test commit',
-        github_token='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'
+        github_token=''
     )
 
