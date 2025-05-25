@@ -85,7 +85,7 @@ def push_to_github(repo_owner, repo_name, file_path, commit_message, github_toke
 # Main logic
 if __name__ == '__main__':
     image_path = r'C:\Users\sourav\Downloads\Sample_Migration_Diagram_v2.drawio.png'
-    github_token = ''
+    github_tk = ''
     anthropic_api_key = 'your_anthropic_api_key_here'
 
     image_base64 = load_image_as_base64(image_path)
@@ -99,5 +99,5 @@ if __name__ == '__main__':
         repo_name='GenAI',
         file_path=summary_filename,
         commit_message='Add image summary from Claude Sonnet',
-        github_token=github_token
+        github_tk=github_tk
     )
