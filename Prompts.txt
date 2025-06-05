@@ -1,0 +1,16 @@
+Summary
+-------
+
+Please analyze the uploaded Mermaid diagram and provide a concise executive summary covering:
+System Overview
+What business process, system, or workflow does this diagram represent? What is its primary function within the organization?
+Business Value
+What key business problems does this system solve? How does it improve operations, efficiency, or customer experience?
+Compliance & Regulatory Impact
+What regulatory requirements, compliance obligations, or risk management functions does this system address?
+Primary Purpose & Strategic Importance
+In 2-3 sentences, summarize the essence of this system and why it's critical to the business.
+
+convert the ""Customer Due Diligence" mermaid diagram provided previously to graph-database consumable json format
+
+I am looking to create graph using APOC CALL in neo4j for this json. Create a sample APOC procedure call for CDD json generated previously.

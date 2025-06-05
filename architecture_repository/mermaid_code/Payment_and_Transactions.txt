@@ -1,0 +1,92 @@
+graph TD
+    subgraph "Customer Channels & Initiation"
+        direction TB
+        APP001["APP001:<br/>OmniChannel<br/>Banking Portal"]
+        APP004["APP004:<br/>Mobile Banking<br/>App iOS"]
+        APP005["APP005:<br/>Mobile Banking<br/>App Android"]
+        APP015["APP015:<br/>Business Lending<br/>Portal SME"]
+        APP017["APP017:<br/>Wealth Management<br/>Client Portal"]
+        APP029["APP029:<br/>ATM Network<br/>Management"]
+    end
+
+    subgraph "Security & API Gateway"
+        direction TB
+        APP022["APP022:<br/>Customer IAM &<br/>Auth Service"]
+        APP030["APP030:<br/>Enterprise<br/>API Gateway"]
+    end
+
+    subgraph "Core Payment & Transaction Processing"
+        direction TB
+        APP034["APP034:<br/>Payments<br/>Orchestration Layer"]
+        
+        subgraph "Payment Engines"
+            direction LR
+            APP006["APP006:<br/>Retail Payments<br/>Processing Engine"]
+            APP016["APP016:<br/>Corporate Payments<br/>Gateway"]
+            APP035["APP035:<br/>Cross-Border<br/>Payments Service"]
+            APP036["APP036:<br/>Real-time<br/>Payments Gateway"]
+        end
+        
+        subgraph "Core Services"
+            direction LR
+            APP002["APP002:<br/>Core Account<br/>Service"]
+            APP018["APP018:<br/>Treasury<br/>Management System"]
+            APP012["APP012:<br/>Fraud Detection<br/>& Prevention"]
+        end
+    end
+
+    subgraph "Shared Capabilities & Downstream"
+        direction TB
+        APP039["APP039:<br/>Enterprise Event Hub<br/>- Kafka"]
+        
+        subgraph "Data & Analytics"
+            direction LR
+            APP010["APP010:<br/>Transaction Monitoring<br/>System - TMS"]
+            APP019["APP019:<br/>Central Data Hub<br/>- EDW"]
+        end
+        
+        APP020["APP020:<br/>Tableau<br/>Reporting Server"]
+    end
+
+    %% Channel to API Gateway (API Integration)
+    APP001 --> APP030
+    APP004 --> APP030
+    APP005 --> APP030
+    APP015 --> APP030
+    APP017 --> APP030
+    APP029 -.-> APP030
+
+    %% API Gateway to IAM for Authentication
+    APP030 <--> APP022
+
+    %% API Gateway to Payments Orchestration Layer
+    APP030 --> APP034
+
+    %% Payments Orchestration to Payment Engines
+    APP034 --> APP006
+    APP034 --> APP016
+    APP034 --> APP035
+    APP034 --> APP036
+
+    %% Payments Orchestration to Core Services
+    APP034 --> APP002
+    APP034 <--> APP012
+    APP018 --> APP034
+
+    %% Event Integration - Payment Processing to Event Hub
+    APP002 -.->|Events| APP039
+    APP006 -.->|Events| APP039
+    APP016 -.->|Events| APP039
+    APP035 -.->|Events| APP039
+    APP036 -.->|Events| APP039
+    APP034 -.->|Events| APP039
+
+    %% Event Hub to Analytics Layer
+    APP039 -.->|Events| APP010
+    APP039 -.->|Data| APP019
+
+    %% TMS to Data Warehouse
+    APP010 -.->|Data| APP019
+
+    %% Reporting from EDW
+    APP019 --> APP020

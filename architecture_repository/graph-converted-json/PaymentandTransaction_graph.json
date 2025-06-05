@@ -1,0 +1,558 @@
+{
+  "metadata": {
+    "diagram_type": "payment_and_transactions_system",
+    "description": "Comprehensive payment processing and transaction management ecosystem",
+    "created_from": "mermaid_flowchart"
+  },
+  "nodes": [
+    {
+      "id": "APP001",
+      "label": "OmniChannel Banking Portal",
+      "type": "customer_channel",
+      "category": "Customer Channels & Initiation",
+      "properties": {
+        "full_name": "APP001: OmniChannel Banking Portal",
+        "channel_type": "web_portal",
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP004",
+      "label": "Mobile Banking App iOS",
+      "type": "customer_channel",
+      "category": "Customer Channels & Initiation",
+      "properties": {
+        "full_name": "APP004: Mobile Banking App iOS",
+        "channel_type": "mobile_app",
+        "platform": "iOS",
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP005",
+      "label": "Mobile Banking App Android",
+      "type": "customer_channel",
+      "category": "Customer Channels & Initiation",
+      "properties": {
+        "full_name": "APP005: Mobile Banking App Android",
+        "channel_type": "mobile_app",
+        "platform": "Android",
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP015",
+      "label": "Business Lending Portal SME",
+      "type": "customer_channel",
+      "category": "Customer Channels & Initiation",
+      "properties": {
+        "full_name": "APP015: Business Lending Portal SME",
+        "channel_type": "business_portal",
+        "customer_segment": "SME",
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP017",
+      "label": "Wealth Management Client Portal",
+      "type": "customer_channel",
+      "category": "Customer Channels & Initiation",
+      "properties": {
+        "full_name": "APP017: Wealth Management Client Portal",
+        "channel_type": "wealth_portal",
+        "customer_segment": "wealth_management",
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP029",
+      "label": "ATM Network Management",
+      "type": "customer_channel",
+      "category": "Customer Channels & Initiation",
+      "properties": {
+        "full_name": "APP029: ATM Network Management",
+        "channel_type": "atm_network",
+        "physical_channel": true,
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP022",
+      "label": "Customer IAM & Auth Service",
+      "type": "security_service",
+      "category": "Security & API Gateway",
+      "properties": {
+        "full_name": "APP022: Customer IAM & Auth Service",
+        "service_type": "authentication",
+        "security_function": "identity_access_management"
+      }
+    },
+    {
+      "id": "APP030",
+      "label": "Enterprise API Gateway",
+      "type": "security_service",
+      "category": "Security & API Gateway",
+      "properties": {
+        "full_name": "APP030: Enterprise API Gateway",
+        "service_type": "api_gateway",
+        "security_function": "api_management"
+      }
+    },
+    {
+      "id": "APP034",
+      "label": "Payments Orchestration Layer",
+      "type": "payment_orchestration",
+      "category": "Core Payment & Transaction Processing",
+      "properties": {
+        "full_name": "APP034: Payments Orchestration Layer",
+        "service_type": "orchestration",
+        "critical": true
+      }
+    },
+    {
+      "id": "APP006",
+      "label": "Retail Payments Processing Engine",
+      "type": "payment_engine",
+      "category": "Payment Engines",
+      "properties": {
+        "full_name": "APP006: Retail Payments Processing Engine",
+        "payment_type": "retail",
+        "engine_type": "processing"
+      }
+    },
+    {
+      "id": "APP016",
+      "label": "Corporate Payments Gateway",
+      "type": "payment_engine",
+      "category": "Payment Engines",
+      "properties": {
+        "full_name": "APP016: Corporate Payments Gateway",
+        "payment_type": "corporate",
+        "engine_type": "gateway"
+      }
+    },
+    {
+      "id": "APP035",
+      "label": "Cross-Border Payments Service",
+      "type": "payment_engine",
+      "category": "Payment Engines",
+      "properties": {
+        "full_name": "APP035: Cross-Border Payments Service",
+        "payment_type": "cross_border",
+        "engine_type": "service"
+      }
+    },
+    {
+      "id": "APP036",
+      "label": "Real-time Payments Gateway",
+      "type": "payment_engine",
+      "category": "Payment Engines",
+      "properties": {
+        "full_name": "APP036: Real-time Payments Gateway",
+        "payment_type": "real_time",
+        "engine_type": "gateway"
+      }
+    },
+    {
+      "id": "APP002",
+      "label": "Core Account Service",
+      "type": "core_service",
+      "category": "Core Services",
+      "properties": {
+        "full_name": "APP002: Core Account Service",
+        "service_type": "core_banking",
+        "critical": true
+      }
+    },
+    {
+      "id": "APP018",
+      "label": "Treasury Management System",
+      "type": "core_service",
+      "category": "Core Services",
+      "properties": {
+        "full_name": "APP018: Treasury Management System",
+        "service_type": "treasury",
+        "financial_function": "treasury_management"
+      }
+    },
+    {
+      "id": "APP012",
+      "label": "Fraud Detection & Prevention",
+      "type": "core_service",
+      "category": "Core Services",
+      "properties": {
+        "full_name": "APP012: Fraud Detection & Prevention",
+        "service_type": "fraud_detection",
+        "security_function": "fraud_prevention"
+      }
+    },
+    {
+      "id": "APP039",
+      "label": "Enterprise Event Hub - Kafka",
+      "type": "shared_capability",
+      "category": "Shared Capabilities & Downstream",
+      "properties": {
+        "full_name": "APP039: Enterprise Event Hub - Kafka",
+        "technology": "kafka",
+        "data_type": "streaming"
+      }
+    },
+    {
+      "id": "APP010",
+      "label": "Transaction Monitoring System - TMS",
+      "type": "data_analytics",
+      "category": "Data & Analytics",
+      "properties": {
+        "full_name": "APP010: Transaction Monitoring System - TMS",
+        "analytics_type": "transaction_monitoring",
+        "compliance_function": "AML"
+      }
+    },
+    {
+      "id": "APP019",
+      "label": "Central Data Hub - EDW",
+      "type": "data_analytics",
+      "category": "Data & Analytics",
+      "properties": {
+        "full_name": "APP019: Central Data Hub - EDW",
+        "analytics_type": "data_warehouse",
+        "storage_type": "enterprise_data_warehouse"
+      }
+    },
+    {
+      "id": "APP020",
+      "label": "Tableau Reporting Server",
+      "type": "reporting_system",
+      "category": "Shared Capabilities & Downstream",
+      "properties": {
+        "full_name": "APP020: Tableau Reporting Server",
+        "technology": "tableau",
+        "purpose": "business_intelligence"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "source": "APP001",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP004",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP005",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP015",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP017",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP029",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "requests",
+        "synchronous": false,
+        "connection_style": "dotted"
+      }
+    },
+    {
+      "source": "APP030",
+      "target": "APP022",
+      "type": "AUTHENTICATES_WITH",
+      "properties": {
+        "connection_type": "bidirectional",
+        "data_flow": "auth_tokens",
+        "security_function": true
+      }
+    },
+    {
+      "source": "APP022",
+      "target": "APP030",
+      "type": "VALIDATES_FOR",
+      "properties": {
+        "connection_type": "bidirectional",
+        "data_flow": "validation_response",
+        "security_function": true
+      }
+    },
+    {
+      "source": "APP030",
+      "target": "APP034",
+      "type": "ROUTES_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "payment_requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP034",
+      "target": "APP006",
+      "type": "ORCHESTRATES",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "payment_instructions",
+        "orchestration": true
+      }
+    },
+    {
+      "source": "APP034",
+      "target": "APP016",
+      "type": "ORCHESTRATES",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "payment_instructions",
+        "orchestration": true
+      }
+    },
+    {
+      "source": "APP034",
+      "target": "APP035",
+      "type": "ORCHESTRATES",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "payment_instructions",
+        "orchestration": true
+      }
+    },
+    {
+      "source": "APP034",
+      "target": "APP036",
+      "type": "ORCHESTRATES",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "payment_instructions",
+        "orchestration": true
+      }
+    },
+    {
+      "source": "APP034",
+      "target": "APP002",
+      "type": "INTEGRATES_WITH",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "account_operations",
+        "core_service": true
+      }
+    },
+    {
+      "source": "APP034",
+      "target": "APP012",
+      "type": "VALIDATES_WITH",
+      "properties": {
+        "connection_type": "bidirectional",
+        "data_flow": "fraud_checks",
+        "security_function": true
+      }
+    },
+    {
+      "source": "APP012",
+      "target": "APP034",
+      "type": "RESPONDS_TO",
+      "properties": {
+        "connection_type": "bidirectional",
+        "data_flow": "fraud_results",
+        "security_function": true
+      }
+    },
+    {
+      "source": "APP018",
+      "target": "APP034",
+      "type": "FEEDS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "treasury_data",
+        "financial_function": true
+      }
+    },
+    {
+      "source": "APP002",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP006",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP016",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP035",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP036",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP034",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP039",
+      "target": "APP010",
+      "type": "STREAMS_TO",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP039",
+      "target": "APP019",
+      "type": "FEEDS_DATA",
+      "properties": {
+        "connection_type": "data_integration",
+        "data_flow": "data",
+        "batch_process": true
+      }
+    },
+    {
+      "source": "APP010",
+      "target": "APP019",
+      "type": "FEEDS_DATA",
+      "properties": {
+        "connection_type": "data_integration",
+        "data_flow": "data",
+        "batch_process": true
+      }
+    },
+    {
+      "source": "APP019",
+      "target": "APP020",
+      "type": "REPORTS_TO",
+      "properties": {
+        "connection_type": "reporting_integration",
+        "data_flow": "reporting_data",
+        "purpose": "business_intelligence"
+      }
+    }
+  ],
+  "subgraphs": [
+    {
+      "id": "customer_channels",
+      "name": "Customer Channels & Initiation",
+      "description": "All customer-facing channels for payment initiation",
+      "nodes": ["APP001", "APP004", "APP005", "APP015", "APP017", "APP029"]
+    },
+    {
+      "id": "security_gateway",
+      "name": "Security & API Gateway",
+      "description": "Security and API management layer",
+      "nodes": ["APP022", "APP030"]
+    },
+    {
+      "id": "core_payment_processing",
+      "name": "Core Payment & Transaction Processing",
+      "description": "Central payment processing and orchestration",
+      "nodes": ["APP034"],
+      "subgroups": [
+        {
+          "id": "payment_engines",
+          "name": "Payment Engines",
+          "nodes": ["APP006", "APP016", "APP035", "APP036"]
+        },
+        {
+          "id": "core_services",
+          "name": "Core Services",
+          "nodes": ["APP002", "APP018", "APP012"]
+        }
+      ]
+    },
+    {
+      "id": "shared_capabilities",
+      "name": "Shared Capabilities & Downstream",
+      "description": "Shared data processing and reporting capabilities",
+      "nodes": ["APP039", "APP020"],
+      "subgroups": [
+        {
+          "id": "data_analytics",
+          "name": "Data & Analytics",
+          "nodes": ["APP010", "APP019"]
+        }
+      ]
+    }
+  ],
+  "data_flow_summary": {
+    "primary_flow": "Customer Channels → API Gateway → Payment Orchestration → Payment Engines → Event Hub → Analytics → Reporting",
+    "critical_path": ["APP030", "APP034", "APP039"],
+    "data_types": ["payment_requests", "payment_instructions", "events", "analytical_data", "reports"],
+    "security_layer": ["APP022", "APP030", "APP012"]
+  }
+}

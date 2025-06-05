@@ -1,0 +1,326 @@
+{
+  "metadata": {
+    "diagram_type": "transaction_monitoring_system",
+    "description": "Financial crime detection and transaction monitoring workflow",
+    "created_from": "mermaid_flowchart"
+  },
+  "nodes": [
+    {
+      "id": "APP002",
+      "label": "Core Account Service",
+      "type": "payment_service",
+      "category": "Payment Services Layer 1",
+      "properties": {
+        "full_name": "APP002: Core Account Service",
+        "layer": 1,
+        "service_type": "core_banking"
+      }
+    },
+    {
+      "id": "APP006",
+      "label": "Retail Payments Processing Engine",
+      "type": "payment_service",
+      "category": "Payment Services Layer 1",
+      "properties": {
+        "full_name": "APP006: Retail Payments Processing Engine",
+        "layer": 1,
+        "service_type": "retail_payments"
+      }
+    },
+    {
+      "id": "APP016",
+      "label": "Corporate Payments Gateway",
+      "type": "payment_service",
+      "category": "Payment Services Layer 2",
+      "properties": {
+        "full_name": "APP016: Corporate Payments Gateway",
+        "layer": 2,
+        "service_type": "corporate_payments"
+      }
+    },
+    {
+      "id": "APP018",
+      "label": "Treasury Management System",
+      "type": "payment_service",
+      "category": "Payment Services Layer 2",
+      "properties": {
+        "full_name": "APP018: Treasury Management System",
+        "layer": 2,
+        "service_type": "treasury"
+      }
+    },
+    {
+      "id": "APP034",
+      "label": "Payments Orchestration Layer",
+      "type": "payment_service",
+      "category": "Payment Services Layer 3",
+      "properties": {
+        "full_name": "APP034: Payments Orchestration Layer",
+        "layer": 3,
+        "service_type": "orchestration"
+      }
+    },
+    {
+      "id": "APP035",
+      "label": "Cross-Border Payments Service",
+      "type": "payment_service",
+      "category": "Payment Services Layer 3",
+      "properties": {
+        "full_name": "APP035: Cross-Border Payments Service",
+        "layer": 3,
+        "service_type": "cross_border"
+      }
+    },
+    {
+      "id": "APP036",
+      "label": "Real-time Payments Gateway",
+      "type": "payment_service",
+      "category": "Payment Services Layer 4",
+      "properties": {
+        "full_name": "APP036: Real-time Payments Gateway",
+        "layer": 4,
+        "service_type": "real_time_payments"
+      }
+    },
+    {
+      "id": "APP010",
+      "label": "Transaction Monitoring System - TMS",
+      "type": "financial_crime_system",
+      "category": "Financial Crime Systems",
+      "properties": {
+        "full_name": "APP010: Transaction Monitoring System - TMS",
+        "system_type": "monitoring",
+        "critical": true
+      }
+    },
+    {
+      "id": "APP014",
+      "label": "Enterprise Data Hub Financial Crime Data Lake",
+      "type": "financial_crime_system",
+      "category": "Financial Crime Systems",
+      "properties": {
+        "full_name": "APP014: Enterprise Data Hub Financial Crime Data Lake",
+        "system_type": "data_lake",
+        "storage_type": "analytical"
+      }
+    },
+    {
+      "id": "APP011",
+      "label": "AML Case Management System",
+      "type": "financial_crime_system",
+      "category": "Financial Crime Systems",
+      "properties": {
+        "full_name": "APP011: AML Case Management System",
+        "system_type": "case_management",
+        "compliance_function": "AML"
+      }
+    },
+    {
+      "id": "APP039",
+      "label": "Enterprise Event Hub - Kafka",
+      "type": "enterprise_data_system",
+      "category": "Enterprise Data Systems",
+      "properties": {
+        "full_name": "APP039: Enterprise Event Hub - Kafka",
+        "technology": "kafka",
+        "data_type": "streaming"
+      }
+    },
+    {
+      "id": "APP020",
+      "label": "Tableau Reporting Server",
+      "type": "reporting_system",
+      "category": "Reporting Systems",
+      "properties": {
+        "full_name": "APP020: Tableau Reporting Server",
+        "technology": "tableau",
+        "purpose": "business_intelligence"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "source": "APP002",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP006",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP016",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP018",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP034",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP035",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP036",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP039",
+      "target": "APP010",
+      "type": "STREAMS_TO",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP010",
+      "target": "APP011",
+      "type": "TRIGGERS_CASE",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "alerts",
+        "trigger_based": true
+      }
+    },
+    {
+      "source": "APP010",
+      "target": "APP014",
+      "type": "FEEDS_DATA",
+      "properties": {
+        "connection_type": "data_integration",
+        "data_flow": "analytical_data",
+        "batch_process": true
+      }
+    },
+    {
+      "source": "APP011",
+      "target": "APP014",
+      "type": "FEEDS_DATA",
+      "properties": {
+        "connection_type": "data_integration",
+        "data_flow": "case_data",
+        "batch_process": true
+      }
+    },
+    {
+      "source": "APP011",
+      "target": "APP020",
+      "type": "REPORTS_TO",
+      "properties": {
+        "connection_type": "reporting_integration",
+        "data_flow": "reporting_data",
+        "purpose": "case_reporting"
+      }
+    },
+    {
+      "source": "APP014",
+      "target": "APP020",
+      "type": "REPORTS_TO",
+      "properties": {
+        "connection_type": "reporting_integration",
+        "data_flow": "analytical_data",
+        "purpose": "business_intelligence"
+      }
+    }
+  ],
+  "subgraphs": [
+    {
+      "id": "upstream_payments",
+      "name": "Upstream Payment & Transaction Applications",
+      "description": "All payment processing systems that generate transaction data",
+      "nodes": ["APP002", "APP006", "APP016", "APP018", "APP034", "APP035", "APP036"],
+      "layers": [
+        {
+          "layer_id": 1,
+          "name": "Payment Services Layer 1",
+          "nodes": ["APP002", "APP006"]
+        },
+        {
+          "layer_id": 2,
+          "name": "Payment Services Layer 2", 
+          "nodes": ["APP016", "APP018"]
+        },
+        {
+          "layer_id": 3,
+          "name": "Payment Services Layer 3",
+          "nodes": ["APP034", "APP035"]
+        },
+        {
+          "layer_id": 4,
+          "name": "Payment Services Layer 4",
+          "nodes": ["APP036"]
+        }
+      ]
+    },
+    {
+      "id": "financial_crime",
+      "name": "Financial Crime Systems",
+      "description": "Systems responsible for detecting and managing financial crime",
+      "nodes": ["APP010", "APP014", "APP011"]
+    },
+    {
+      "id": "enterprise_data",
+      "name": "Enterprise Data Systems", 
+      "description": "Central data processing and event streaming systems",
+      "nodes": ["APP039"]
+    },
+    {
+      "id": "reporting",
+      "name": "Reporting Systems",
+      "description": "Business intelligence and reporting platforms",
+      "nodes": ["APP020"]
+    }
+  ],
+  "data_flow_summary": {
+    "primary_flow": "Payment Systems → Event Hub → Transaction Monitoring → Case Management → Reporting",
+    "critical_path": ["APP039", "APP010", "APP011"],
+    "data_types": ["transaction_events", "alerts", "case_data", "analytical_data", "reports"]
+  }
+}

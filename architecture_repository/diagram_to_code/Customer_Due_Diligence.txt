@@ -1,0 +1,59 @@
+graph TD
+    subgraph CHANNELS["CUSTOMER CHANNELS"]
+        APP001["APP001<br/>OmniChannel Banking Portal"]
+        APP004["APP004<br/>Mobile Banking iOS"]
+        APP040["APP040<br/>Digital Onboarding"]
+        APP003["APP003<br/>Loan Origination"]
+    end
+
+    subgraph SECURITY["SECURITY & API GATEWAY"]
+        APP030["APP030<br/>Enterprise API Gateway"]
+        APP022["APP022<br/>Customer IAM & Auth"]
+    end
+
+    subgraph KYCDD["KYC/CDD VERIFICATION"]
+        APP009["APP009<br/>CDD/KYC Workflow"]
+        APP031["APP031<br/>Document Verification"]
+        APP008["APP008<br/>Sanctions Screening"]
+        APP033["APP033<br/>Customer 360 View"]
+    end
+
+    subgraph CRIME["FINANCIAL CRIME"]
+        APP011["APP011<br/>AML Case Management"]
+        APP014["APP014<br/>Financial Crime Data Hub"]
+    end
+
+    subgraph SHARED["DATA & REPORTING"]
+        APP039["APP039<br/>Event Hub - Kafka"]
+        APP019["APP019<br/>Central Data Hub"]
+        APP020["APP020<br/>Tableau Reporting"]
+    end
+
+    %% Customer Channels to API Gateway
+    CHANNELS --> APP030
+    
+    %% API Gateway Authentication
+    APP030 <--> APP022
+    
+    %% API Gateway to KYC
+    APP030 --> APP009
+    
+    %% KYC to Verification Services
+    APP009 --> APP031
+    APP009 --> APP008
+    APP009 --> APP033
+    
+    %% Events to Kafka
+    APP009 -.-> APP039
+    APP031 -.-> APP039
+    APP008 -.-> APP039
+    
+    %% Data Flows
+    APP039 --> APP014
+    APP009 --> APP011
+    APP011 --> APP014
+    APP014 --> APP019
+    
+    %% Reporting
+    APP019 --> APP020
+    APP014 --> APP020

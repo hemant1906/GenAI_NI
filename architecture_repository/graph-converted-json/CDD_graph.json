@@ -1,0 +1,426 @@
+{
+  "metadata": {
+    "diagram_type": "customer_due_diligence_system",
+    "description": "Comprehensive KYC/CDD verification and compliance workflow",
+    "created_from": "mermaid_flowchart"
+  },
+  "nodes": [
+    {
+      "id": "APP001",
+      "label": "OmniChannel Banking Portal",
+      "type": "customer_channel",
+      "category": "Customer Channels",
+      "properties": {
+        "full_name": "APP001: OmniChannel Banking Portal",
+        "channel_type": "web_portal",
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP004",
+      "label": "Mobile Banking iOS",
+      "type": "customer_channel",
+      "category": "Customer Channels",
+      "properties": {
+        "full_name": "APP004: Mobile Banking iOS",
+        "channel_type": "mobile_app",
+        "platform": "iOS",
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP040",
+      "label": "Digital Onboarding",
+      "type": "customer_channel",
+      "category": "Customer Channels",
+      "properties": {
+        "full_name": "APP040: Digital Onboarding",
+        "channel_type": "onboarding_portal",
+        "process_type": "customer_acquisition",
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP003",
+      "label": "Loan Origination",
+      "type": "customer_channel",
+      "category": "Customer Channels",
+      "properties": {
+        "full_name": "APP003: Loan Origination",
+        "channel_type": "lending_portal",
+        "process_type": "loan_application",
+        "customer_facing": true
+      }
+    },
+    {
+      "id": "APP030",
+      "label": "Enterprise API Gateway",
+      "type": "security_service",
+      "category": "Security & API Gateway",
+      "properties": {
+        "full_name": "APP030: Enterprise API Gateway",
+        "service_type": "api_gateway",
+        "security_function": "api_management",
+        "critical": true
+      }
+    },
+    {
+      "id": "APP022",
+      "label": "Customer IAM & Auth",
+      "type": "security_service",
+      "category": "Security & API Gateway",
+      "properties": {
+        "full_name": "APP022: Customer IAM & Auth",
+        "service_type": "authentication",
+        "security_function": "identity_access_management"
+      }
+    },
+    {
+      "id": "APP009",
+      "label": "CDD/KYC Workflow",
+      "type": "kyc_verification",
+      "category": "KYC/CDD Verification",
+      "properties": {
+        "full_name": "APP009: CDD/KYC Workflow",
+        "verification_type": "workflow_orchestration",
+        "compliance_function": "KYC_CDD",
+        "critical": true
+      }
+    },
+    {
+      "id": "APP031",
+      "label": "Document Verification",
+      "type": "kyc_verification",
+      "category": "KYC/CDD Verification",
+      "properties": {
+        "full_name": "APP031: Document Verification",
+        "verification_type": "document_validation",
+        "compliance_function": "identity_verification"
+      }
+    },
+    {
+      "id": "APP008",
+      "label": "Sanctions Screening",
+      "type": "kyc_verification",
+      "category": "KYC/CDD Verification",
+      "properties": {
+        "full_name": "APP008: Sanctions Screening",
+        "verification_type": "sanctions_check",
+        "compliance_function": "AML_sanctions",
+        "regulatory_critical": true
+      }
+    },
+    {
+      "id": "APP033",
+      "label": "Customer 360 View",
+      "type": "kyc_verification",
+      "category": "KYC/CDD Verification",
+      "properties": {
+        "full_name": "APP033: Customer 360 View",
+        "verification_type": "customer_profile",
+        "data_aggregation": true,
+        "holistic_view": true
+      }
+    },
+    {
+      "id": "APP011",
+      "label": "AML Case Management",
+      "type": "financial_crime",
+      "category": "Financial Crime",
+      "properties": {
+        "full_name": "APP011: AML Case Management",
+        "crime_type": "case_management",
+        "compliance_function": "AML",
+        "regulatory_critical": true
+      }
+    },
+    {
+      "id": "APP014",
+      "label": "Financial Crime Data Hub",
+      "type": "financial_crime",
+      "category": "Financial Crime",
+      "properties": {
+        "full_name": "APP014: Financial Crime Data Hub",
+        "crime_type": "data_aggregation",
+        "storage_type": "crime_data_lake",
+        "analytics_enabled": true
+      }
+    },
+    {
+      "id": "APP039",
+      "label": "Event Hub - Kafka",
+      "type": "data_system",
+      "category": "Data & Reporting",
+      "properties": {
+        "full_name": "APP039: Event Hub - Kafka",
+        "technology": "kafka",
+        "data_type": "streaming",
+        "real_time": true
+      }
+    },
+    {
+      "id": "APP019",
+      "label": "Central Data Hub",
+      "type": "data_system",
+      "category": "Data & Reporting",
+      "properties": {
+        "full_name": "APP019: Central Data Hub",
+        "data_type": "enterprise_data_warehouse",
+        "storage_type": "centralized",
+        "analytics_enabled": true
+      }
+    },
+    {
+      "id": "APP020",
+      "label": "Tableau Reporting",
+      "type": "reporting_system",
+      "category": "Data & Reporting",
+      "properties": {
+        "full_name": "APP020: Tableau Reporting",
+        "technology": "tableau",
+        "purpose": "business_intelligence",
+        "visualization": true
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "source": "APP001",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "customer_requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP004",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "customer_requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP040",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "onboarding_requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP003",
+      "target": "APP030",
+      "type": "CONNECTS_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "loan_requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP030",
+      "target": "APP022",
+      "type": "AUTHENTICATES_WITH",
+      "properties": {
+        "connection_type": "bidirectional",
+        "data_flow": "auth_tokens",
+        "security_function": true
+      }
+    },
+    {
+      "source": "APP022",
+      "target": "APP030",
+      "type": "VALIDATES_FOR",
+      "properties": {
+        "connection_type": "bidirectional",
+        "data_flow": "validation_response",
+        "security_function": true
+      }
+    },
+    {
+      "source": "APP030",
+      "target": "APP009",
+      "type": "ROUTES_TO",
+      "properties": {
+        "connection_type": "api_integration",
+        "data_flow": "kyc_requests",
+        "synchronous": true
+      }
+    },
+    {
+      "source": "APP009",
+      "target": "APP031",
+      "type": "INITIATES_VERIFICATION",
+      "properties": {
+        "connection_type": "workflow_integration",
+        "data_flow": "document_verification_request",
+        "verification_step": true
+      }
+    },
+    {
+      "source": "APP009",
+      "target": "APP008",
+      "type": "INITIATES_SCREENING",
+      "properties": {
+        "connection_type": "workflow_integration",
+        "data_flow": "sanctions_screening_request",
+        "verification_step": true,
+        "regulatory_critical": true
+      }
+    },
+    {
+      "source": "APP009",
+      "target": "APP033",
+      "type": "BUILDS_PROFILE",
+      "properties": {
+        "connection_type": "workflow_integration",
+        "data_flow": "customer_profile_data",
+        "verification_step": true
+      }
+    },
+    {
+      "source": "APP009",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "kyc_events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP031",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "document_verification_events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP008",
+      "target": "APP039",
+      "type": "PUBLISHES_EVENTS",
+      "properties": {
+        "connection_type": "event_integration",
+        "data_flow": "sanctions_screening_events",
+        "real_time": true,
+        "regulatory_critical": true
+      }
+    },
+    {
+      "source": "APP039",
+      "target": "APP014",
+      "type": "STREAMS_TO",
+      "properties": {
+        "connection_type": "data_integration",
+        "data_flow": "crime_data_events",
+        "real_time": true
+      }
+    },
+    {
+      "source": "APP009",
+      "target": "APP011",
+      "type": "TRIGGERS_CASE",
+      "properties": {
+        "connection_type": "workflow_integration",
+        "data_flow": "suspicious_activity_alert",
+        "trigger_based": true,
+        "compliance_function": true
+      }
+    },
+    {
+      "source": "APP011",
+      "target": "APP014",
+      "type": "FEEDS_DATA",
+      "properties": {
+        "connection_type": "data_integration",
+        "data_flow": "case_management_data",
+        "batch_process": true
+      }
+    },
+    {
+      "source": "APP014",
+      "target": "APP019",
+      "type": "FEEDS_DATA",
+      "properties": {
+        "connection_type": "data_integration",
+        "data_flow": "aggregated_crime_data",
+        "batch_process": true
+      }
+    },
+    {
+      "source": "APP019",
+      "target": "APP020",
+      "type": "REPORTS_TO",
+      "properties": {
+        "connection_type": "reporting_integration",
+        "data_flow": "reporting_data",
+        "purpose": "compliance_reporting"
+      }
+    },
+    {
+      "source": "APP014",
+      "target": "APP020",
+      "type": "REPORTS_TO",
+      "properties": {
+        "connection_type": "reporting_integration",
+        "data_flow": "crime_analytics_data",
+        "purpose": "risk_reporting"
+      }
+    }
+  ],
+  "subgraphs": [
+    {
+      "id": "customer_channels",
+      "name": "Customer Channels",
+      "description": "All customer-facing applications for onboarding and services",
+      "nodes": ["APP001", "APP004", "APP040", "APP003"]
+    },
+    {
+      "id": "security_api_gateway",
+      "name": "Security & API Gateway",
+      "description": "Security layer managing authentication and API access",
+      "nodes": ["APP030", "APP022"]
+    },
+    {
+      "id": "kyc_cdd_verification",
+      "name": "KYC/CDD Verification",
+      "description": "Core verification and due diligence processing systems",
+      "nodes": ["APP009", "APP031", "APP008", "APP033"]
+    },
+    {
+      "id": "financial_crime",
+      "name": "Financial Crime",
+      "description": "Anti-money laundering and financial crime management",
+      "nodes": ["APP011", "APP014"]
+    },
+    {
+      "id": "data_reporting",
+      "name": "Data & Reporting",
+      "description": "Data processing, storage, and business intelligence",
+      "nodes": ["APP039", "APP019", "APP020"]
+    }
+  ],
+  "compliance_flow": {
+    "primary_kyc_flow": "Customer Channels → API Gateway → KYC Workflow → Verification Services → Event Hub → Crime Data Hub → Reporting",
+    "critical_compliance_path": ["APP009", "APP008", "APP011", "APP014"],
+    "regulatory_touchpoints": ["APP008", "APP009", "APP011", "APP014", "APP020"],
+    "data_types": ["customer_data", "verification_results", "sanctions_alerts", "case_data", "compliance_reports"]
+  },
+  "verification_workflow": {
+    "orchestration_center": "APP009",
+    "verification_services": ["APP031", "APP008", "APP033"],
+    "downstream_actions": ["APP011", "APP014"],
+    "real_time_events": ["APP009", "APP031", "APP008"],
+    "compliance_outcomes": ["case_creation", "regulatory_reporting", "customer_approval_rejection"]
+  }
+}

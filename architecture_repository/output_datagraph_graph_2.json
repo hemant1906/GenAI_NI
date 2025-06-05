@@ -1,0 +1,73 @@
+{
+    "nodes": [
+        "APP001",
+        "APP030",
+        "APP004",
+        "APP005",
+        "APP015",
+        "APP017",
+        "APP034",
+        "APP006",
+        "APP016",
+        "APP035",
+        "APP036",
+        "APP002",
+        "APP018",
+        "APP019",
+        "APP020"
+    ],
+    "edges": [
+        {
+            "source": "APP001",
+            "target": "APP030"
+        },
+        {
+            "source": "APP030",
+            "target": "APP034"
+        },
+        {
+            "source": "APP004",
+            "target": "APP030"
+        },
+        {
+            "source": "APP005",
+            "target": "APP030"
+        },
+        {
+            "source": "APP015",
+            "target": "APP030"
+        },
+        {
+            "source": "APP017",
+            "target": "APP030"
+        },
+        {
+            "source": "APP034",
+            "target": "APP006"
+        },
+        {
+            "source": "APP034",
+            "target": "APP016"
+        },
+        {
+            "source": "APP034",
+            "target": "APP035"
+        },
+        {
+            "source": "APP034",
+            "target": "APP036"
+        },
+        {
+            "source": "APP034",
+            "target": "APP002"
+        },
+        {
+            "source": "APP018",
+            "target": "APP034"
+        },
+        {
+            "source": "APP019",
+            "target": "APP020"
+        }
+    ]
+}

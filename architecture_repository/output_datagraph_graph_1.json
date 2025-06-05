@@ -1,0 +1,61 @@
+{
+    "nodes": [
+        "CHANNELS",
+        "APP030",
+        "APP009",
+        "APP031",
+        "APP008",
+        "APP033",
+        "APP039",
+        "APP014",
+        "APP011",
+        "APP019",
+        "APP020"
+    ],
+    "edges": [
+        {
+            "source": "CHANNELS",
+            "target": "APP030"
+        },
+        {
+            "source": "APP030",
+            "target": "APP009"
+        },
+        {
+            "source": "APP009",
+            "target": "APP031"
+        },
+        {
+            "source": "APP009",
+            "target": "APP008"
+        },
+        {
+            "source": "APP009",
+            "target": "APP033"
+        },
+        {
+            "source": "APP009",
+            "target": "APP011"
+        },
+        {
+            "source": "APP039",
+            "target": "APP014"
+        },
+        {
+            "source": "APP014",
+            "target": "APP019"
+        },
+        {
+            "source": "APP014",
+            "target": "APP020"
+        },
+        {
+            "source": "APP011",
+            "target": "APP014"
+        },
+        {
+            "source": "APP019",
+            "target": "APP020"
+        }
+    ]
+}
