@@ -3,13 +3,13 @@ import requests
 import os
 import git
 
-'''
+
 # Load image and encode as base64
 def load_image_as_base64(image_path):
     with open(image_path, 'rb') as image_file:
         encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
     return encoded_image
-'''
+
 
 # Push file to GitHub
 def push_to_github(repo_owner, repo_name, file_path, commit_message, github_token):

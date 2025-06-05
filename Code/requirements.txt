@@ -1,0 +1,6 @@
+networkx
+chromadb
+torch_geometric
+torch
+node2vec
+neo4j
