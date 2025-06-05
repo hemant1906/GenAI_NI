@@ -59,18 +59,30 @@ class Neo4jImporter:
         rel_type = edge_data.get('type', edge_data.get('relationship', edge_data.get('label', 'RELATES_TO')))
         properties = edge_data.get('properties', {})
 
-        # Build the Cypher query
-        props_str = ', '.join([f"{k}: ${k}" for k in properties.keys()]) if properties else ''
+        # Escape relationship type if it contains spaces or special characters
+        escaped_rel_type = f"`{rel_type}`" if ' ' in rel_type or not rel_type.replace('_', '').isalnum() else rel_type
+
+        # Prepare properties for Cypher - escape property keys if needed
+        escaped_props = {}
+        props_list = []
+        for k, v in properties.items():
+            # Escape property key if it contains spaces or special characters
+            escaped_key = f"`{k}`" if ' ' in k or not k.replace('_', '').isalnum() else k
+            param_key = k.replace(' ', '_').replace('-', '_')  # Safe parameter name
+            props_list.append(f"{escaped_key}: ${param_key}")
+            escaped_props[param_key] = v
+
+        props_str = ', '.join(props_list)
         props_clause = f" {{{props_str}}}" if props_str else ""
 
         cypher = f"""
         MATCH (a {{id: $source}})
         MATCH (b {{id: $target}})
-        MERGE (a)-[r:{rel_type}{props_clause}]->(b)
+        MERGE (a)-[r:{escaped_rel_type}{props_clause}]->(b)
         """
 
         # Execute query
-        params = {'source': source, 'target': target, **properties}
+        params = {'source': source, 'target': target, **escaped_props}
         tx.run(cypher, params)
 
 
