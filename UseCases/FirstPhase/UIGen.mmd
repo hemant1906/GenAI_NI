@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant AppBackend as "Application Backend"
+    participant DataFormatter as "Data Formatter"
+    participant VisualRenderer as "Visual Renderer (D3.js / Mermaid)"
+    participant TableRenderer as "Table Renderer"
+
+
+    AppBackend->>DataFormatter: Receive raw data from Neo4j
+    DataFormatter->>DataFormatter: Transform Neo4j response into a client-friendly format (e.g., list of nodes and links for D3)
+
+    alt User chose "Graph View"
+        DataFormatter->>VisualRenderer: Pass formatted graph data
+        VisualRenderer->>VisualRenderer: Render SVG graph from nodes and links data
+    else User chose "Table View"
+        DataFormatter->>TableRenderer: Pass formatted data
+        TableRenderer->>TableRenderer: Render HTML table from data
+    end

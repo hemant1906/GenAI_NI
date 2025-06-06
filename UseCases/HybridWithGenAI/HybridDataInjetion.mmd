@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant User
+    participant ApplicationUI as "Application UI"
+    participant IngestionService as "Ingestion Service"
+    participant Ollama3_2 as "Ollama 3.2"
+    participant VectorDB as "Vector Database"
+    participant Neo4jDB as "Neo4j Database"
+
+    User->>ApplicationUI: Upload Mermaid Diagram, Metadata & Unstructured Docs (e.g., READMEs)
+    ApplicationUI->>IngestionService: Submit all artifacts
+    IngestionService->>Ollama3_2: 1. Parse Mermaid diagram for entities & relations
+    Ollama3_2-->>IngestionService: Extracted Nodes and Edges
+    IngestionService->>Neo4jDB: 2. Store nodes, relationships, and structured metadata
+    Neo4jDB-->>IngestionService: Confirmation
+
+    IngestionService->>IngestionService: 3. Chunk unstructured documents
+    IngestionService->>Ollama3_2: 4. Create embeddings for text chunks
+    Ollama3_2-->>IngestionService: Text Embeddings
+    IngestionService->>VectorDB: 5. Store text chunks and their embeddings
+    VectorDB-->>IngestionService: Confirmation
+    IngestionService-->>ApplicationUI: Ingestion Complete

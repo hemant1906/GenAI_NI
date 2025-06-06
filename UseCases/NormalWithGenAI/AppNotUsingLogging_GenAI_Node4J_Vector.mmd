@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant User
+    participant ApplicationUI as "Application UI"
+    participant RAGApplication as "RAG Application"
+    participant Ollama3_2 as "Ollama 3.2"
+    participant Neo4jDB as "Neo4j Database"
+    participant VectorDB as "Vector Database"
+
+    User->>ApplicationUI: Query: "Which applications don't use logging?"
+    ApplicationUI->>RAGApplication: Forward Query
+    RAGApplication->>Ollama3_2: Convert Natural Language Query to Metadata Query
+    Ollama3_2-->>RAGApplication: Generated Metadata Query
+    RAGApplication->>VectorDB: Query for Applications without 'logging' attribute
+    VectorDB-->>RAGApplication: Return Application List
+    RAGApplication->>Neo4jDB: Retrieve Relationships for these Applications
+    Neo4jDB-->>RAGApplication: Return Relationship Data
+    RAGApplication->>ApplicationUI: Send Formatted Results
+    ApplicationUI->>User: Display Results (Table/Text)
