@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant User
+    participant ApplicationUI as "Application UI"
+    participant AppBackend as "Application Backend"
+    participant Neo4jDB as "Neo4j Database"
+
+    User->>ApplicationUI: Selects a query type (e.g., "Find impacted apps") and specifies a component (e.g., "App A")
+    ApplicationUI->>AppBackend: Sends structured request (e.g., GET /api/impact?component=AppA)
+    AppBackend->>AppBackend: Look up corresponding pre-defined Cypher query template
+    AppBackend->>Neo4jDB: Execute parameterized Cypher query
+    Neo4jDB-->>AppBackend: Return raw graph data (nodes, relationships, properties)
+    AppBackend-->>ApplicationUI: Send processed data back to the UI (e.g., as JSON)

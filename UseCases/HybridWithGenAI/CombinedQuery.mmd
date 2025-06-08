@@ -1,0 +1,35 @@
+sequenceDiagram
+    participant User
+    participant ApplicationUI as "Application UI"
+    participant RAGApplication as "RAG Application (with Query Router)"
+    participant Ollama3_2 as "Ollama 3.2"
+    participant Neo4jDB as "Neo4j Database"
+    participant VectorDB as "Vector Database"
+
+    User->>ApplicationUI: Submit natural language query
+    ApplicationUI->>RAGApplication: Forward query
+
+    RAGApplication->>RAGApplication: Classify query intent (e.g., rule-based or LLM)
+
+    alt Structured Query (e.g., "Find impacted apps", "Find apps without logging")
+        RAGApplication->>RAGApplication: Select pre-defined Cypher query template
+        RAGApplication->>Neo4jDB: Execute parameterized Cypher query
+        Neo4jDB-->>RAGApplication: Return structured data (nodes, relations, properties)
+        opt Summarize in natural language
+            RAGApplication->>Ollama3_2: "Summarize these results: [data]"
+            Ollama3_2-->>RAGApplication: Natural language summary
+        end
+        RAGApplication->>ApplicationUI: Send formatted results (Data + Optional Summary)
+
+    else Unstructured/Semantic Query (e.g., "How is user authentication handled?")
+        RAGApplication->>Ollama3_2: Generate embedding for the user query
+        Ollama3_2-->>RAGApplication: Query Vector
+        RAGApplication->>VectorDB: Find similar documents (context)
+        VectorDB-->>RAGApplication: Return relevant text chunks
+        RAGApplication->>Ollama3_2: "Answer this query: '[Query]' using this context: '[Context]'"
+        Ollama3_2-->>RAGApplication: Synthesized answer
+        RAGApplication->>ApplicationUI: Send generated answer
+
+    end
+
+    ApplicationUI->>User: Display Results (Graph/Table/Text)
