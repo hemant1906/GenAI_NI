@@ -13,12 +13,12 @@ from ollama import Client
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 # Environment variables for connections
-NEO4J_URI = "bolt://host.docker.internal:7687"#os.getenv("NEO4J_URI")
-NEO4J_USER = "neo4j" #os.getenv("NEO4J_USER")
-NEO4J_PASSWORD ="NAB#Testing25" #os.getenv("NEO4J_PASSWORD")
-QDRANT_HOST = "host.docker.internal" #os.getenv("QDRANT_HOST")
-QDRANT_PORT = "6333" #int(os.getenv("QDRANT_PORT"))
-OLLAMA_HOST = "host.docker.internal:11434" #os.getenv("OLLAMA_HOST")
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USER = os.getenv("NEO4J_USER")
+NEO4J_PASSWORD =os.getenv("NEO4J_PASSWORD")
+QDRANT_HOST = os.getenv("QDRANT_HOST")
+QDRANT_PORT = int(os.getenv("QDRANT_PORT"))
+OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 # Connect to databases and LLM
 try:
     neo4j_driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
@@ -38,7 +38,7 @@ try:
     if not any(c.name == QDRANT_COLLECTION_NAME for c in collections):
         qdrant_client.create_collection(
             collection_name=QDRANT_COLLECTION_NAME,
-            vectors_config=models.VectorParams(size=4096, distance=models.Distance.COSINE), # Llama3 default embedding size
+            vectors_config=models.VectorParams(size=4096, distance=models.Distance.COSINE), # Llama3.1 default embedding size
         )
         print(f"Created Qdrant collection: {QDRANT_COLLECTION_NAME}")
 except Exception as e:
@@ -133,7 +133,7 @@ async def import_data():
 # Prepare data for Qdrant
                 # We create an embedding from the mermaid code + metadata
                 combined_text_for_embedding = mermaid_code + "\n" + "\n".join(f"{k}: {v}" for k, v in metadata.items())
-                embedding = ollama_client.embeddings(model='llama3', prompt=combined_text_for_embedding)['embedding']
+                embedding = ollama_client.embeddings(model='llama3.1', prompt=combined_text_for_embedding)['embedding']
                 
                 point_id = str(uuid.uuid4())
                 points_to_upsert.append(models.PointStruct(
@@ -178,15 +178,16 @@ Examples:
     - User Query: "find all diagrams that deal with authentication" -> {{"tool": "QDRANT_SEMANTIC_SEARCH", "parameters": {{"search_query": "diagrams that deal with authentication"}}}}
     - User Query: "hello there" -> {{"tool": "GENERAL_ANSWER", "parameters": {{}}}}
     """
-    
+    print(prompt)
     response = ollama_client.chat(
-        model='llama3',
+        model='llama3.1',
         messages=[{'role': 'system', 'content': prompt}],
         options={"temperature": 0.0}
     )
+    print(f" response of Strategy search : {response}")
     try:
         # Clean up potential markdown code blocks
-        clean_response = response['message']['content'].replace("```json", "").replace("```", "").strip()
+        clean_response = response['message']['content'].replace("```json", "").replace("```", "").replace("<|python_tag|>","").strip()
         return eval(clean_response) # Using eval is risky, but simplest for this demo. json.loads is safer.
     except Exception as e:
         print(f"Error parsing LLM strategy response: {e}")
@@ -195,7 +196,7 @@ def execute_query(strategy: dict) -> str:
     """Executes the query based on the determined strategy."""
     tool = strategy.get("tool")
     params = strategy.get("parameters", {})
-    
+    print(f"tool chosen: {tool}")
     context = ""
     if tool == "NEO4J_IMPACT_ANALYSIS":
         comp = params.get("component_name")
@@ -211,6 +212,7 @@ def execute_query(strategy: dict) -> str:
                 for node in record['components']:
                     nodes.add(node['label'])
             context = f"Impact analysis for '{comp}' found the following related components: {', '.join(nodes)}"
+            print(context)
     elif tool == "NEO4J_PATHFINDING":
         comp_a = params.get("component_a")
         comp_b = params.get("component_b")
@@ -228,9 +230,10 @@ def execute_query(strategy: dict) -> str:
                 context = f"Found a path between '{comp_a}' and '{comp_b}': {' -> '.join(path_nodes)}"
             else:
                 context = f"No direct or indirect path found between '{comp_a}' and '{comp_b}'."
+            print(context)
     elif tool == "QDRANT_SEMANTIC_SEARCH":
         query = params.get("search_query")
-        embedding = ollama_client.embeddings(model='llama3', prompt=query)['embedding']
+        embedding = ollama_client.embeddings(model='llama3.1', prompt=query)['embedding']
         search_result = qdrant_client.search(
             collection_name=QDRANT_COLLECTION_NAME,
             query_vector=embedding,
@@ -243,9 +246,11 @@ def execute_query(strategy: dict) -> str:
             context += f"Mermaid Code:\n{hit.payload['mermaid_code']}\n"
     else: # GENERAL_ANSWER
         context = "This seems like a general query. I am a specialized AI for architecture diagrams."
+    print(context   )
     return context
 def synthesize_response(user_query: str, context: str) -> dict:
     """Uses LLM to synthesize a final, formatted response."""
+    print(f" Context : {context}")
     prompt = f"""
  You are an expert system architect AI. Your task is to provide a clear and useful answer to the user's query based on the provided context.
     
@@ -269,13 +274,16 @@ Example for a path query:
 Example for a list query:
     {{"format": "markdown", "content": "### Relevant Diagrams\\n\\n| Filename | Score |\\n|---|---|\\n| auth_service.mmd | 0.95 |\\n| payment_service.mmd | 0.88 |"}}
     """
+    print(f"prompt {prompt}")
     response = ollama_client.chat(
-        model='llama3',
+        model='llama3.1',
         messages=[{'role': 'system', 'content': prompt}],
         options={"temperature": 0.5}
     )
     try:
-        clean_response = response['message']['content'].replace("```json", "").replace("```", "").strip()
+        print(f"Response content {response['message']['content']}")
+        print(f"Response message {response['message']}")
+        clean_response = response['message']['content'].replace("```json", "").replace("```", "").replace("<|python_tag|>","").strip()
         # A more robust way to handle potential newlines inside the JSON string content
         return eval(clean_response)
     except Exception as e:
