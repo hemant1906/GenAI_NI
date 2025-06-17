@@ -14,3 +14,26 @@ In 2-3 sentences, summarize the essence of this system and why it's critical to 
 convert the ""Customer Due Diligence" mermaid diagram provided previously to graph-database consumable json format
 
 I am looking to create graph using APOC CALL in neo4j for this json. Create a sample APOC procedure call for CDD json generated previously.
+
+
+============
+
+\\wsl$\docker-desktop\mnt\docker-desktop-disk\data\docker\volumes
+
+Docker
+# docker volume create <vol_name> <<< to create a volume in docker
+# docker run -dp 5432:5432 --mount type=volume,src=pg_data,target=/var/lib/postgresql/data --name mypgsqldb -e POSTGRES_PASSWORD=mysecretpassword -d postgres <<< to run docker container with volume
+	> psql -U postgres -W postgres --> password: mysecretpassword <<< login to pgsql db
+# docker ps -a --filter volume=pg_data <<< check which container using volume
+
+# docker run -d --publish=7474:7474 --publish=7687:7687 --volume=neo4j_data:/data --env NEO4J_AUTH=neo4j/password123 --name myneo4jdb neo4j
+# docker ps -a --filter volume=neo4j_data 
+
+# docker run -dp 8000:8000 --volume=chromadb_data:/data --name mychromadb chromadb/chroma
+# docker run -dp 11434:11434 --volume=ollama_data:/root/.ollama --name ollama ollama/ollama	<<< CPU only !!
+	>> ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB8zri29Q3t+EII4v5HQ7Af8VoZsF0WGqDhK9p9oRMGm  (new public key)
+
+
+
+
+

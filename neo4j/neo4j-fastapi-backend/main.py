@@ -58,7 +58,7 @@ async def run_cypher_query(request: QueryRequest):
                             'properties': dict(value.items())
                         })
 
-            print({"nodes": nodes, "relationships": relationships})
+            # print({"nodes": nodes, "relationships": relationships})
 
             return {
                 "nodes": nodes,

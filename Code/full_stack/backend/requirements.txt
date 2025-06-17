@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+openai
+neo4j
+asyncpg
+faiss-cpu
+numpy
+sentence-transformers
+psycopg2-binary
+pickle-mixin
