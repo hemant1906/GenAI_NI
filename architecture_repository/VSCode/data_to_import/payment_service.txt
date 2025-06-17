@@ -1,0 +1,3 @@
+P: Processes payments, interacts with the database and third-party gateways.
+DB: Stores transaction history.
+AS: The Payment Service calls this service to re-validate user permissions before processing a payment.

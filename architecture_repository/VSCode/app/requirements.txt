@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-multipart
+neo4j
+qdrant-client
+langchain
+langchain_community
+ollama
+pydantic
+requests
+beautifulsoup4
+lxml
