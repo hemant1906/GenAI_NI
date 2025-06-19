@@ -1,6 +1,0 @@
-graph TD
-    A[User] --> B(Auth Service);
-    B --> C{Validate Token};
-    C -- Valid --> D[API Gateway];
-    C -- Invalid --> E[Deny Access];
-    B --> F[User Database];

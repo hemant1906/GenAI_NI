@@ -1,0 +1,20 @@
+APP055: Customer 360 View Application offers a holistic and integrated perspective of all customer-related data.
+APP072: Global Customer ID Registry maintains a central and authoritative database of customer identities worldwide.
+APP092: Customer Data Platform CDP unifies customer data from various sources to create persistent, comprehensive customer profiles for marketing and analytics.
+APP024: KYC/CDD Platform manages the Know Your Customer and Customer Due Diligence processes for identity verification and risk assessment.
+APP026: Enhanced Due Diligence EDD Platform conducts deeper investigations and assessments for high-risk customers or transactions.
+APP110: Identity Proofing Service External provides external services to verify and authenticate the identity of individuals.
+APP119: AI-Powered Loan Default Prediction uses artificial intelligence to forecast the likelihood of loan defaults.
+APP076: User Behavior Analytics UBA analyzes user activities to detect anomalies and potential security threats or fraudulent behavior.
+APP028: Transaction Monitoring Rules Engine applies predefined rules to transactions to identify and flag suspicious patterns.
+APP027: Financial Crime Case Management provides a centralized system for managing and investigating cases related to financial crimes.
+APP113: Regulatory Change Management System helps organizations track, analyze, and respond to changes in regulatory requirements.
+APP022: AML Transaction Monitoring System actively monitors financial transactions for indicators of money laundering.
+APP023: Sanctions Screening Engine screens individuals, entities, and transactions against global sanctions lists.
+APP025: Fraud Detection Prevention System identifies and mitigates fraudulent activities across various financial operations.
+APP042: Enterprise Eventing Platform enables the capture, routing, and processing of events across the organization for real-time interactions.
+APP105: Real-time Data Integration Service facilitates the immediate and continuous flow of data between disparate systems.
+APP074: Enterprise Scheduler Batch Processing automates and manages the execution of large volumes of batch jobs across the enterprise.
+APP083: Customer Data Privacy Management ensures compliance with data privacy regulations and manages customer consent for data usage.
+APP052: Regulatory Reporting Data Hub centralizes and prepares data for various regulatory compliance reports.
+APP080: Regulatory Compliance Reporting Platform generates and submits reports to fulfill various regulatory obligations.

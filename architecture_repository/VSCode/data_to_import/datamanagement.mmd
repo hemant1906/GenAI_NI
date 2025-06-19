@@ -1,0 +1,76 @@
+graph TB
+    %% Source Systems
+    subgraph "Source Systems"
+        APP001[Retail Core Banking System]
+        APP014[Corporate Core Banking System]
+        APP005[Credit Card Management System]
+        APP022[AML Transaction Monitoring System]
+    end
+    
+    %% Data Integration
+    subgraph "Data Integration"
+        APP105[Real-time Data Integration Service]
+        APP066[Data Stream Processing Engine]
+        APP095[Secure File Transfer Protocol SFTP]
+    end
+    
+    %% Core Data Hub
+    subgraph "Enterprise Data Hub"
+        APP045[Enterprise Data Warehouse EDW]
+        APP046[Enterprise Data Lake]
+        APP047[Data Lakehouse Platform]
+        APP107[Customer Data Vault]
+    end
+    
+    %% Master Data & Quality
+    subgraph "Data Management"
+        APP048[Master Data Management MDM]
+        APP049[Data Quality Management Tool]
+        APP116[Enterprise Data Masking Solution]
+    end
+    
+    %% Metadata & Governance
+    subgraph "Data Governance"
+        APP050[Metadata Management System]
+        APP061[Enterprise Data Governance Tool]
+        APP073[Data Lineage & Catalog Tool]
+        APP085[Data Catalog for Analytics]
+    end
+    
+    %% Analytics & Reporting
+    subgraph "Analytics"
+        APP051[BI & Analytics Reporting Platform]
+        APP052[Regulatory Reporting Data Hub]
+    end
+    
+    %% Integration Layer
+    subgraph "Integration"
+        APP043[Message Broker Kafka/RabbitMQ]
+        APP042[Enterprise Eventing Platform]
+    end
+    
+    %% Connections
+    APP001 -->|Batch| APP095
+    APP014 -->|Real-time| APP105
+    APP005 -->|Event| APP042
+    APP022 -->|Stream| APP066
+    
+    APP095 -->|File| APP045
+    APP105 -->|Real-time| APP046
+    APP066 -->|Stream| APP047
+    APP042 -->|Event| APP043
+    
+    APP043 -->|Event| APP107
+    APP045 -->|API| APP048
+    APP046 -->|API| APP049
+    APP047 -->|API| APP116
+    
+    APP048 -->|API| APP050
+    APP049 -->|Event| APP061
+    APP050 -->|API| APP073
+    APP061 -->|API| APP085
+    
+    APP045 -->|API| APP051
+    APP046 -->|API| APP052
+    APP073 -->|API| APP051
+    APP085 -->|API| APP052

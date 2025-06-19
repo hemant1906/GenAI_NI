@@ -101,12 +101,14 @@
                 });
                 const result = await response.json();
                 if (response.ok) {
-                    // Check if the content is Mermaid syntax
-                    if (result.content.trim().startsWith('graph')) {
+                    // Check the format hint from the backend
+                    if (result.format === 'mermaid') {
                         const mermaidContainer = document.createElement('div');
                         mermaidContainer.classList.add('mermaid');
+                        // The backend content should already be in Mermaid syntax
                         mermaidContainer.textContent = result.content;
                         resultOutput.appendChild(mermaidContainer);
+                        // Re-run mermaid to render the new diagram
                         await window.mermaid.run({ nodes: [mermaidContainer] });
                     } else {
                         // Otherwise, render as Markdown

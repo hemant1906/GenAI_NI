@@ -1,0 +1,17 @@
+APP002: Online Banking Portal provides customers with web-based access to their bank accounts and financial services.
+APP003: Mobile Banking App offers a mobile application for customers to manage their banking needs on smartphones and tablets.
+APP018: Private Banking Client Portal is an exclusive online platform for private banking clients to access specialized services and portfolio information.
+APP055: Customer 360 View Application provides a comprehensive and unified view of customer data across all touchpoints.
+APP072: Global Customer ID Registry maintains a unified and authoritative record of customer identities across the organization.
+APP092: Customer Data Platform CDP unifies customer data from various sources to create persistent, comprehensive customer profiles.
+APP007: CRM - Retail & Personal Banking manages customer relationships and interactions specifically for retail and personal banking clients.
+APP019: CRM - Business & Private Banking manages customer relationships and interactions for business and private banking clients.
+APP048: Master Data Management MDM ensures consistency, accuracy, and completeness of an organization's critical shared data.
+APP049: Data Quality Management Tool identifies, corrects, and prevents data errors to maintain high data integrity.
+APP061: Enterprise Data Governance Tool enforces policies and procedures for managing data assets across the entire organization.
+APP039: Customer Identity Access Management CIAM manages customer identities and controls access to digital services and applications.
+APP097: Biometric Authentication Service provides authentication using unique biological characteristics (e.g., fingerprint, facial recognition).
+APP040: API Gateway acts as a single entry point for managing, securing, and monitoring APIs.
+APP042: Enterprise Eventing Platform enables the capture, routing, and processing of events across an organization for real-time interactions.
+APP105: Real-time Data Integration Service enables the immediate and continuous flow of data between disparate systems.
+

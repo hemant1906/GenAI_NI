@@ -1,0 +1,83 @@
+graph TB
+    %% Digital Channels
+    subgraph "Digital Channels"
+        APP002[Online Banking Portal]
+        APP003[Mobile Banking App]
+        APP054[Digital Lending Platform Retail]
+    end
+    
+    %% Core Home Lending
+    subgraph "Home Lending Platform"
+        APP006[Home Loan Origination Platform]
+        APP106[AI-Powered Loan Origination Home Lending]
+        APP079[Digital Document Signature Service]
+    end
+    
+    %% Credit Assessment
+    subgraph "Credit & Risk"
+        APP120[Credit Bureau Integration Service]
+        APP093[AI-Powered Credit Assessment Retail]
+        APP119[AI-Powered Loan Default Prediction]
+    end
+    
+    %% Customer Management
+    subgraph "Customer Management"
+        APP055[Customer 360 View Application]
+        APP024[KYC/CDD Platform]
+        APP011[Customer Onboarding System Retail]
+    end
+    
+    %% Core Banking
+    subgraph "Core Banking"
+        APP001[Retail Core Banking System]
+        APP053[Core Payment Processing Engine]
+    end
+    
+    %% Compliance & Monitoring
+    subgraph "Compliance"
+        APP022[AML Transaction Monitoring System]
+        APP023[Sanctions Screening Engine]
+        APP080[Regulatory Compliance Reporting Platform]
+    end
+    
+    %% Integration Layer
+    subgraph "Integration"
+        APP040[API Gateway]
+        APP042[Enterprise Eventing Platform]
+        APP105[Real-time Data Integration Service]
+    end
+    
+    %% Document Management
+    subgraph "Document Management"
+        APP079[Digital Document Signature Service]
+        APP111[Centralized Audit Logging Service]
+    end
+    
+    %% Connections
+    APP002 -->|API| APP040
+    APP003 -->|API| APP040
+    APP054 -->|API| APP040
+    
+    APP040 -->|API| APP006
+    APP006 -->|API| APP106
+    APP006 -->|API| APP079
+    
+    APP006 -->|API| APP120
+    APP120 -->|API| APP093
+    APP093 -->|Event| APP119
+    
+    APP006 -->|API| APP055
+    APP055 -->|API| APP024
+    APP024 -->|Event| APP011
+    
+    APP006 -->|Event| APP001
+    APP001 -->|API| APP053
+    APP042 -->|Event| APP105
+    
+    APP006 -->|Event| APP022
+    APP022 -->|Event| APP023
+    APP023 -->|Event| APP080
+    
+    APP079 -->|Event| APP111
+    APP105 -->|Real-time| APP006
+
