@@ -1,0 +1,61 @@
+graph TB
+    %% Digital Channels
+    subgraph "Digital Channels"
+        APP002[Online Banking Portal]
+        APP003[Mobile Banking App]
+        APP018[Private Banking Client Portal]
+    end
+    
+    %% Core Customer Management
+    subgraph "Customer & Party Management"
+        APP055[Customer 360 View Application]
+        APP072[Global Customer ID Registry]
+        APP092[Customer Data Platform CDP]
+    end
+    
+    %% CRM & Relationship Management
+    subgraph "CRM & Relationship"
+        APP007[CRM - Retail & Personal Banking]
+        APP019[CRM - Business & Private Banking]
+    end
+    
+    %% Data Management
+    subgraph "Data Hub"
+        APP048[Master Data Management MDM]
+        APP049[Data Quality Management Tool]
+        APP061[Enterprise Data Governance Tool]
+    end
+    
+    %% Identity & Access
+    subgraph "Identity Management"
+        APP039[Customer Identity Access Management CIAM]
+        APP097[Biometric Authentication Service]
+    end
+    
+    %% Integration Layer
+    subgraph "Integration"
+        APP040[API Gateway]
+        APP042[Enterprise Eventing Platform]
+        APP105[Real-time Data Integration Service]
+    end
+    
+    %% Connections
+    APP002 -->|API| APP040
+    APP003 -->|API| APP040
+    APP018 -->|API| APP040
+    
+    APP040 -->|API| APP055
+    APP040 -->|API| APP072
+    APP040 -->|Event| APP042
+    
+    APP055 -->|Event| APP092
+    APP072 -->|API| APP048
+    APP092 -->|API| APP007
+    APP092 -->|API| APP019
+    
+    APP048 -->|Batch| APP049
+    APP049 -->|Event| APP061
+    APP105 -->|Real-time| APP055
+    
+    APP039 -->|API| APP097
+    APP042 -->|Event| APP105
