@@ -33,7 +33,14 @@ Docker
 # docker run -dp 11434:11434 --volume=ollama_data:/root/.ollama --name ollama ollama/ollama	<<< CPU only !!
 	>> ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB8zri29Q3t+EII4v5HQ7Af8VoZsF0WGqDhK9p9oRMGm  (new public key)
 
+# neo4j with apoc
+in the terminal within docker desltop 
+-- cd to inside the foloer --- downloads/test_data/neo4j_apoc/
+-- docker compose up -d
 
+docker volume create n8n_data
 
+docker run --rm --name n8n -d -p 5678:5678 -v n8n_data:/home/node/.n8n n8n
 
+===================================
 

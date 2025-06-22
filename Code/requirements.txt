@@ -13,3 +13,17 @@ sentence-transformers~=4.1.0
 pickle-mixin
 requests~=2.32.3
 asyncpg~=0.30.0
+sqlalchemy~=2.0.41
+psycopg2~=2.9.10
+psycopg2-binary~=2.9.10
+python-dotenv~=1.1.0
+dotenv
+asyncpg
+langchain
+langchain-core
+pydantic
+langchain-community>=0.0.20
+python-multipart
+aiofiles
+pillow
+google-generativeai
