@@ -1,3 +1,0 @@
-A: RepresentsB: Handles user authentication and token validation.
-F: Stores user credentials and profiles.
-D: Routes validated requests to other microservices.

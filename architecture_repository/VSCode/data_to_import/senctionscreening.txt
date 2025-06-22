@@ -1,0 +1,18 @@
+APP001: Retail Core Banking System processes daily banking transactions like interest calculation, passbook maintenance, and withdrawal
+APP014: A core banking system comprises back-end servers that handle standard operations, processes daily banking transactions like interest calculation, passbook maintenance, and withdrawal
+APP053: Core Payment Processing is a foundational system for executing and managing financial transactions.
+APP078: Real-time Payment Hub facilitates immediate processing and settlement of payments.
+APP023: Sanctions Screening Engine screens transactions and entities against regulatory sanctions lists.
+APP100: Global Sanctions Screening Batch performs large-scale, periodic screening against global sanctions lists.
+APP028: Transaction Monitoring Rules Engine applies predefined rules to identify suspicious transaction patterns.
+APP027: Financial Crime Case Management provides a centralized system for managing and investigating financial crime cases.
+APP060: Threat Intelligence Platform aggregates and analyzes data on potential cyber threats.
+APP048: Master Data Management MDM ensures consistency and quality of an organization's critical shared data.
+APP072: Global Customer ID Registry maintains a unified and authoritative record of customer identities.
+APP022: AML Transaction Monitoring System monitors financial transactions for potential money laundering activities.
+APP059: Security Information Event Management SIEM collects and analyzes security-related events for threat detection and compliance.
+APP042: Enterprise Eventing Platform enables the capture, routing, and processing of events across an organization.
+APP066: Data Stream Processing Engine processes continuous streams of data in real time.
+APP043: Message Broker Kafka/RabbitMQ is an intermediary for asynchronous communication between different parts of a distributed system.
+APP052: Regulatory Reporting Data Hub centralizes and prepares data for various regulatory compliance reports.
+APP080: Regulatory Compliance Reporting Platform generates and submits reports to meet regulatory requirements.

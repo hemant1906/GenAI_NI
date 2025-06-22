@@ -1,0 +1,22 @@
+APP002: Online Banking Portal provides customers with web-based access to their bank accounts and financial services.
+APP003: Mobile Banking App offers a mobile application for customers to manage their banking needs on smartphones and tablets.
+APP054: Digital Lending Platform Retail streamlines the entire lending process for retail customers, from application to disbursement, digitally.
+APP006: Home Loan Origination Platform manages the end-to-end process of originating home loans, from application to approval.
+APP106: AI-Powered Loan Origination Home Lending leverages artificial intelligence to automate and enhance the home loan origination process.
+APP079: Digital Document Signature Service enables secure and legally binding electronic signatures on digital documents.
+APP120: Credit Bureau Integration Service connects to credit bureaus to retrieve credit scores and reports for loan applicants.
+APP093: AI-Powered Credit Assessment Retail uses artificial intelligence to evaluate the creditworthiness of retail loan applicants.
+APP119: AI-Powered Loan Default Prediction utilizes AI to predict the likelihood of a loan applicant defaulting on their payments.
+APP055: Customer 360 View Application provides a comprehensive and unified view of customer data across all touchpoints.
+APP024: KYC/CDD Platform manages the Know Your Customer and Customer Due Diligence processes for identity verification and risk assessment.
+APP011: Customer Onboarding System Retail facilitates the smooth and efficient process of bringing new retail customers into the bank.
+APP001: Retail Core Banking System manages the fundamental banking operations for retail customers, including accounts, deposits, and loans.
+APP053: Core Payment Processing Engine is a foundational system for executing and managing financial transactions.
+APP022: AML Transaction Monitoring System actively monitors financial transactions for indicators of money laundering.
+APP023: Sanctions Screening Engine screens individuals, entities, and transactions against global sanctions lists.
+APP080: Regulatory Compliance Reporting Platform generates and submits reports to fulfill various regulatory obligations.
+APP040: API Gateway acts as a single entry point for managing, securing, and monitoring APIs.
+APP042: Enterprise Eventing Platform enables the capture, routing, and processing of events across an organization for real-time interactions.
+APP105: Real-time Data Integration Service facilitates the immediate and continuous flow of data between disparate systems.
+APP079: Digital Document Signature Service enables secure and legally binding electronic signatures on digital documents.
+APP111: Centralized Audit Logging Service collects and stores audit logs from various systems for security and compliance purposes.

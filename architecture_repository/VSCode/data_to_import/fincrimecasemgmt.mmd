@@ -1,0 +1,75 @@
+graph TB
+    %% Customer Data Sources
+    subgraph "Customer Data Sources"
+        APP055[Customer 360 View Application]
+        APP072[Global Customer ID Registry]
+        APP092[Customer Data Platform CDP]
+    end
+    
+    %% Core CDD Platform
+    subgraph "Due Diligence Platform"
+        APP024[KYC/CDD Platform]
+        APP026[Enhanced Due Diligence EDD Platform]
+        APP110[Identity Proofing Service External]
+    end
+    
+    %% Risk Assessment
+    subgraph "Risk Management"
+        APP119[AI-Powered Loan Default Prediction]
+        APP076[User Behavior Analytics UBA]
+        APP028[Transaction Monitoring Rules Engine]
+    end
+    
+    %% Case Management
+    subgraph "Case Management"
+        APP027[Financial Crime Case Management]
+        APP113[Regulatory Change Management System]
+    end
+    
+    %% Monitoring & Screening
+    subgraph "Monitoring"
+        APP022[AML Transaction Monitoring System]
+        APP023[Sanctions Screening Engine]
+        APP025[Fraud Detection Prevention System]
+    end
+    
+    %% Integration Layer
+    subgraph "Integration"
+        APP042[Enterprise Eventing Platform]
+        APP105[Real-time Data Integration Service]
+        APP074[Enterprise Scheduler Batch Processing]
+    end
+    
+    %% Compliance & Reporting
+    subgraph "Compliance"
+        APP083[Customer Data Privacy Management]
+        APP052[Regulatory Reporting Data Hub]
+        APP080[Regulatory Compliance Reporting Platform]
+    end
+    
+    %% Connections
+    APP055 -->|API| APP024
+    APP072 -->|API| APP024
+    APP092 -->|Event| APP042
+    
+    APP024 -->|API| APP026
+    APP024 -->|API| APP110
+    APP026 -->|Event| APP119
+    
+    APP119 -->|API| APP076
+    APP076 -->|Event| APP028
+    APP028 -->|Event| APP027
+    
+    APP024 -->|Event| APP022
+    APP026 -->|Event| APP023
+    APP022 -->|Event| APP025
+    
+    APP027 -->|API| APP113
+    APP042 -->|Event| APP105
+    APP074 -->|Batch| APP024
+    
+    APP027 -->|Event| APP083
+    APP083 -->|Batch| APP052
+    APP052 -->|API| APP080
+    APP105 -->|Real-time| APP027
+

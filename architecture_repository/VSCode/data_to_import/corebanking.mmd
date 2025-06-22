@@ -1,0 +1,84 @@
+graph TB
+    %% Digital Channels
+    subgraph "Digital Channels"
+        APP002[Online Banking Portal]
+        APP003[Mobile Banking App]
+        APP082[Branch Transaction Management System]
+    end
+    
+    %% Core Banking System
+    subgraph "Core Banking"
+        APP001[Retail Core Banking System]
+        APP053[Core Payment Processing Engine]
+        APP078[Real-time Payment Hub]
+    end
+    
+    %% Customer Management
+    subgraph "Customer Management"
+        APP055[Customer 360 View Application]
+        APP011[Customer Onboarding System Retail]
+        APP007[CRM - Retail & Personal Banking]
+    end
+    
+    %% Financial Tools
+    subgraph "Financial Planning"
+        APP010[Financial Planning Tool Personal]
+        APP012[Customer Loyalty & Rewards Platform]
+        APP068[Automated Customer Outreach Platform]
+    end
+    
+    %% Compliance & Monitoring
+    subgraph "Compliance"
+        APP022[AML Transaction Monitoring System]
+        APP023[Sanctions Screening Engine]
+        APP025[Fraud Detection Prevention System]
+    end
+    
+    %% Integration Layer
+    subgraph "Integration"
+        APP040[API Gateway]
+        APP042[Enterprise Eventing Platform]
+        APP105[Real-time Data Integration Service]
+    end
+    
+    %% Customer Service
+    subgraph "Customer Support"
+        APP081[AI-Driven Customer Service Bot]
+        APP101[Digital Customer Engagement Platform]
+    end
+    
+    %% Data & Analytics
+    subgraph "Analytics"
+        APP104[Customer Segmentation & Targeting Engine]
+        APP092[Customer Data Platform CDP]
+    end
+    
+    %% Connections
+    APP002 -->|API| APP040
+    APP003 -->|API| APP040
+    APP082 -->|API| APP040
+    
+    APP040 -->|API| APP001
+    APP001 -->|API| APP053
+    APP001 -->|Event| APP078
+    
+    APP001 -->|Event| APP055
+    APP055 -->|API| APP011
+    APP055 -->|Event| APP007
+    
+    APP007 -->|API| APP010
+    APP007 -->|Event| APP012
+    APP012 -->|Event| APP068
+    
+    APP001 -->|Event| APP022
+    APP022 -->|Event| APP023
+    APP022 -->|Event| APP025
+    
+    APP042 -->|Event| APP105
+    APP105 -->|Real-time| APP001
+    
+    APP040 -->|API| APP081
+    APP081 -->|API| APP101
+    
+    APP007 -->|Event| APP104
+    APP104 -->|API| APP092

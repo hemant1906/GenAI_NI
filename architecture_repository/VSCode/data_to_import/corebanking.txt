@@ -1,0 +1,22 @@
+APP002: Online Banking Portal provides customers with web-based access to their bank accounts and financial services.
+APP003: Mobile Banking App offers a mobile application for customers to manage their banking needs on smartphones and tablets.
+APP082: Branch Transaction Management System manages and processes financial transactions conducted within bank branches.
+APP001: Retail Core Banking System manages the fundamental banking operations for retail customers, including accounts, deposits, and loans.
+APP053: Core Payment Processing Engine is a foundational system for executing and managing financial transactions.
+APP078: Real-time Payment Hub facilitates immediate processing and settlement of payments.
+APP055: Customer 360 View Application provides a comprehensive and unified view of customer data across all touchpoints.
+APP011: Customer Onboarding System Retail facilitates the smooth and efficient process of bringing new retail customers into the bank.
+APP007: CRM - Retail & Personal Banking manages customer relationships and interactions specifically for retail and personal banking clients.
+APP010: Financial Planning Tool Personal assists individuals in managing their personal finances, setting goals, and planning for the future.
+APP012: Customer Loyalty & Rewards Platform manages programs designed to reward and retain loyal customers.
+APP068: Automated Customer Outreach Platform enables automated communication with customers for marketing, support, or informational purposes.
+APP022: AML Transaction Monitoring System actively monitors financial transactions for indicators of money laundering.
+APP023: Sanctions Screening Engine screens individuals, entities, and transactions against global sanctions lists.
+APP025: Fraud Detection Prevention System identifies and mitigates fraudulent activities across various financial operations.
+APP040: API Gateway acts as a single entry point for managing, securing, and monitoring APIs.
+APP042: Enterprise Eventing Platform enables the capture, routing, and processing of events across an organization for real-time interactions.
+APP105: Real-time Data Integration Service facilitates the immediate and continuous flow of data between disparate systems.
+APP081: AI-Driven Customer Service Bot utilizes artificial intelligence to provide automated customer support and answer queries.
+APP101: Digital Customer Engagement Platform facilitates interactive and personalized communication with customers across various digital channels.
+APP104: Customer Segmentation & Targeting Engine analyzes customer data to group them into segments for targeted marketing and service.
+APP092: Customer Data Platform CDP unifies customer data from various sources to create persistent, comprehensive customer profiles for marketing and analytics.

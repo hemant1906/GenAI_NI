@@ -1,0 +1,22 @@
+APP001: Retail Core Banking System manages the fundamental banking operations for retail customers, including accounts, deposits, and loans.
+APP014: Corporate Core Banking System handles the core banking functionalities for corporate clients, such as large-scale transactions and specialized accounts.
+APP005: Credit Card Management System oversees the lifecycle of credit cards, from issuance to transaction processing and billing.
+APP022: AML Transaction Monitoring System actively monitors financial transactions to detect and prevent potential money laundering activities.
+APP105: Real-time Data Integration Service enables the immediate and continuous flow of data between disparate systems.
+APP066: Data Stream Processing Engine processes continuous streams of data in real time for immediate insights and actions.
+APP095: Secure File Transfer Protocol SFTP facilitates the secure and reliable transfer of files over a network.
+APP045: Enterprise Data Warehouse EDW stores integrated historical data from various sources for business intelligence and reporting.
+APP046: Enterprise Data Lake stores raw, unprocessed data in its native format for diverse analytical purposes.
+APP047: Data Lakehouse Platform combines the flexibility of a data lake with the structure of a data warehouse.
+APP107: Customer Data Vault securely stores and organizes customer data, providing a single, consistent view.
+APP048: Master Data Management MDM ensures consistency, accuracy, and completeness of an organization's critical shared data.
+APP049: Data Quality Management Tool identifies, corrects, and prevents data errors to maintain high data integrity.
+APP116: Enterprise Data Masking Solution protects sensitive data by obscuring it while maintaining its usability for development or testing.
+APP050: Metadata Management System organizes and maintains information about an organization's data assets, including their structure and meaning.
+APP061: Enterprise Data Governance Tool enforces policies and procedures for managing data assets across the organization.
+APP073: Data Lineage & Catalog Tool tracks the origin and movement of data and provides a searchable inventory of data assets.
+APP085: Data Catalog for Analytics serves as a centralized inventory of data assets specifically for analytical users, facilitating data discovery.
+APP051: BI & Analytics Reporting Platform provides tools for creating interactive dashboards, reports, and performing data analysis.
+APP052: Regulatory Reporting Data Hub centralizes and prepares data to meet various financial and industry regulatory reporting requirements.
+APP043: Message Broker Kafka/RabbitMQ acts as an intermediary for asynchronous communication, facilitating reliable message exchange between distributed applications.
+APP042: Enterprise Eventing Platform manages and distributes events across an organization, enabling event-driven architectures.

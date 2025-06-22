@@ -1,0 +1,24 @@
+APP018: Private Banking Client Portal is an exclusive online platform for private banking clients to access specialized services and portfolio information.
+APP017: Corporate Cash Management Portal provides corporate clients with tools to manage their cash flow, payments, and liquidity.
+APP096: Digital Onboarding Platform Business streamlines the digital onboarding process for new business customers.
+APP013: Small Business Lending Platform facilitates the lending process specifically for small and medium-sized businesses.
+APP015: Corporate Lending Platform manages the origination and servicing of loans for large corporate entities.
+APP067: AI-Powered Loan Underwriting Business Lending utilizes artificial intelligence to automate and enhance the loan underwriting process for business loans.
+APP014: Corporate Core Banking System handles the core banking functionalities for corporate clients, such as large-scale transactions and specialized accounts.
+APP021: Treasury Management System Corporate assists corporations in managing their financial assets, investments, and financial risks.
+APP053: Core Payment Processing Engine is a foundational system for executing and managing financial transactions.
+APP016: Trade Finance Processing System manages the entire lifecycle of trade finance transactions, including letters of credit and guarantees.
+APP020: Supply Chain Finance Platform provides financial solutions to optimize cash flow within a supply chain.
+APP094: Blockchain for Trade Finance POC is a Proof of Concept (POC) exploring the use of blockchain technology in trade finance.
+APP120: Credit Bureau Integration Service connects to credit bureaus to retrieve credit scores and reports for loan applicants.
+APP119: AI-Powered Loan Default Prediction utilizes AI to predict the likelihood of a loan applicant defaulting on their payments.
+APP028: Transaction Monitoring Rules Engine applies predefined rules to transactions to identify suspicious patterns.
+APP019: CRM - Business & Private Banking manages customer relationships and interactions for business and private banking clients.
+APP055: Customer 360 View Application provides a comprehensive and unified view of customer data across all touchpoints.
+APP118: Chatbot for Corporate Support offers automated conversational support for corporate clients.
+APP022: AML Transaction Monitoring System actively monitors financial transactions for indicators of money laundering.
+APP023: Sanctions Screening Engine screens individuals, entities, and transactions against global sanctions lists.
+APP024: KYC/CDD Platform manages the Know Your Customer and Customer Due Diligence processes for identity verification and risk assessment.
+APP040: API Gateway acts as a single entry point for managing, securing, and monitoring APIs.
+APP042: Enterprise Eventing Platform enables the capture, routing, and processing of events across an organization for real-time interactions.
+APP105: Real-time Data Integration Service facilitates the immediate and continuous flow of data between disparate systems.
