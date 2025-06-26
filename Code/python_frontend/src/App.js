@@ -81,7 +81,6 @@ export default function App() {
 
   // Chat States
     const [sessionId, setSessionId] = useState("");
-    const [activeCollection, setActiveCollection] = useState("architecture_diagrams");
     const [query, setQuery] = useState("");
     const [chatHistory, setChatHistory] = useState([]);
   //  const [chatResponse, setChatResponse] = useState("");  Replaced by latestResponse
@@ -150,6 +149,7 @@ export default function App() {
 
       const addedNodes = new Set();
       const addedEdges = new Set();
+
       graphResults.forEach((item) => {
         const source = item.n.id;
         const target = item.m.id;
@@ -167,7 +167,7 @@ export default function App() {
           addedNodes.add(target);
         }
         if (!addedEdges.has(edgeId)) {
-            cy.add({ data: { id: edgeId, source, target, label: relType } });
+            cy.add({ data: { id: edgeId, source, target, sourceLabel, targetLabel, label: relType } });
             addedEdges.add(edgeId);
         }
       });
@@ -340,7 +340,6 @@ export default function App() {
 
         const formData = new FormData();
         formData.append("query", query);
-        formData.append("collection", activeCollection);
         formData.append("session_id", sessionId);
 
         axios.post("http://localhost:7000/chat/", formData)
@@ -399,17 +398,19 @@ export default function App() {
               {
                 selector: 'node',
                 style: {
-                  'background-color': '#d9534f',
-                  'label': 'data(label)',
-                  'color': '#fff',
-                  'text-valign': 'center',
-                  'text-halign': 'center',
-                  'font-size': '10px',
-                  'width': 40,
-                  'height': 40,
-                  'border-width': 2,
-                  'border-color': '#000'
-                }
+                    'background-color': '#d9534f',
+                    'label': 'data(label)',
+                    'color': '#fff',
+                    'text-valign': 'center',
+                    'text-halign': 'center',
+                    'font-size': '8px',
+                    'text-wrap': 'wrap',
+                    'text-max-width': 40,
+                    'width': 50,
+                    'height': 50,
+                    'border-width': 2,
+                    'border-color': '#000'
+                  }
               },
               {
                 selector: 'edge',
@@ -434,14 +435,18 @@ export default function App() {
 
           interfaceResults.forEach(row => {
             const source = row.from_node;
+            const source_name = row.source_name;
             const target = row.to_node;
+            const target_name = row.target_name;
+            const sourceLabel = source_name ? `${source}: ${source_name}` : source;
+            const targetLabel = target_name ? `${target}: ${target_name}` : target;
 
             if (!addedNodes.has(source)) {
-              cy.add({ data: { id: source, label: source } });
+              cy.add({ data: { id: source, label: sourceLabel } });
               addedNodes.add(source);
             }
             if (!addedNodes.has(target)) {
-              cy.add({ data: { id: target, label: target } });
+              cy.add({ data: { id: target, label: targetLabel } });
               addedNodes.add(target);
             }
 
@@ -454,7 +459,7 @@ export default function App() {
 
   return (
         <div className="container">
-            <h2 className="app-title">Architecture Insight Generator</h2>
+            <h2 className="app-title">Architecture Agent</h2>
             <div className="tab-container">
                 {/* Tabs */}
                 <div className="tabs">
@@ -615,8 +620,8 @@ export default function App() {
                 <div className="flex-layout">
                   <div className="left-panel">
                     <h2>App Connect Explorer</h2>
-                    <label>Enter App ID:</label>
                     <div className="suggestion-wrapper">
+                        <label>Enter App ID:</label>
                       <input type="text" className="input-box" value={appIdInput} onChange={(e) => { setAppIdInput(e.target.value); fetchAppSuggestions(e.target.value); }} placeholder="Start typing App ID" />
                       {appSuggestions.length > 0 && (
                           <ul className="suggestion-list">
@@ -668,11 +673,6 @@ export default function App() {
                             ⟳
                         </button>
                     </div>
-                    <div className="collection-tabs">
-                        <button className={activeCollection === "architecture_diagrams" ? "active" : ""} onClick={() => setActiveCollection("architecture_diagrams")}>Diagrams</button>
-                        <button className={activeCollection === "architecture_applications" ? "active" : ""} onClick={() => setActiveCollection("architecture_applications")}>Applications</button>
-                        <button className={activeCollection === "architecture_complexity" ? "active" : ""} onClick={() => setActiveCollection("architecture_complexity")}>Complexities</button>
-                    </div>
                     <div className="chat-input">
                         <textarea placeholder="Ask your question..." value={query} onChange={(e) => setQuery(e.target.value)} />
                         <button onClick={handleChatSubmit}>Send</button>
@@ -680,9 +680,16 @@ export default function App() {
 
                     <div className="chat-latest">
                         <h3>Latest Response:</h3>
-                        <div className="chat-response">
-                            <ReactMarkdown>{latestResponse}</ReactMarkdown>
-                        </div>
+                        {latestResponse && (
+                                <div className="chat-response">
+                                    <ReactMarkdown>
+                                        {latestResponse
+                                            .replace(/\|(\s*):---.*\|/g, match => `${match}\n`)
+                                            .replace(/\|\s*\|/g, "|\n|")
+                                        }
+                                    </ReactMarkdown>
+                                </div>
+                         )}
                     </div>
 
                     <div className="chat-history-collapsible">
@@ -756,8 +763,8 @@ export default function App() {
                         <tbody>
                           {interfaceResults.map((row, idx) => (
                             <tr key={idx}>
-                              <td>{row.from_node}</td>
-                              <td>{row.to_node}</td>
+                              <td>{row.source_name ? `${row.from_node}: ${row.source_name}` : row.from_node}</td>
+                              <td>{row.target_name ? `${row.to_node}: ${row.target_name}` : row.to_node}</td>
                               <td>{row.interface_type}</td>
                               <td>{row.protocol}</td>
                             </tr>

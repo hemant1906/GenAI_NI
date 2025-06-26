@@ -49,7 +49,7 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
 
         # Image to base64
         img_b64 = base64.b64encode(image.file.read()).decode()
-
+        '''
         # Structured Gemini Prompt
         prompt = """
 You are an expert Enterprise Architect. Analyze the provided system architecture diagram. From the diagram, extract the following:
@@ -130,13 +130,14 @@ The output must contain one clearly separated block per application, using the s
         
         result = gemini_resp.json()
 
-        '''
+        
         with open("test_response_genai_3.json", "w") as f:
             json.dump(gemini_resp.json(), f, indent=2)
-        
+
+        '''
         with open("test_response_genai_3.json", "r") as f:
             result = json.load(f)
-        '''
+
 
         if "candidates" not in result:
             raise HTTPException(status_code=500, detail=result)
@@ -269,6 +270,21 @@ The output must contain one clearly separated block per application, using the s
 
 # --- Chat Section with simple RAM based chat history --- #
 
+def infer_collection(prompt: str) -> str:
+    prompt_lower = prompt.lower()
+
+    if any(keyword in prompt_lower for keyword in ["complexity", "risk", "rationale", "complex"]):
+        return "architecture_complexity"
+
+    elif any(keyword in prompt_lower for keyword in ["application", "app", "asset", "integration", "relationship", "upstream", "downstream", "connection"]):
+        return "architecture_applications"
+
+    elif any(keyword in prompt_lower for keyword in ["diagram", "cons", "pros", "summary", "description", "architecture", "design"]):
+        return "architecture_diagrams"
+
+    else:
+        return "architecture_diagrams"
+
 # Config
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
@@ -291,7 +307,7 @@ def reset_session(session_id: str = Form(...)):
     return {"error": "Session ID not found."}
 
 @app.post("/chat/")
-def chat(query: str = Form(...), collection: str = Form(...), session_id: str = Form(...)):
+def chat(query: str = Form(...), session_id: str = Form(...)):
     try:
         # Validate collection input
         valid_collections = [
@@ -300,11 +316,14 @@ def chat(query: str = Form(...), collection: str = Form(...), session_id: str = 
             "architecture_complexity"
         ]
 
-        if collection not in valid_collections:
-            return {"error": f"Invalid collection. Choose from {valid_collections}"}
-
         if session_id not in chat_memory:
             return {"error": "Invalid session_id. Generate one first."}
+
+            # Auto-select collection
+        collection = infer_collection(query)
+
+        if collection not in valid_collections:
+            return {"error": "Failed to infer collection."}
 
         # Retrieve past conversation (if any)
         context_text = chat_memory.get(session_id, "")
@@ -371,15 +390,17 @@ def get_relationships_by_interface_type(asset_ids: List[str], interface_type: st
     query = """
     MATCH (a)-[r]->(b)
     WHERE a.id IN $ids AND r.interface_type = $interface_type
-    RETURN a.id AS from_node, b.id AS to_node, r.interface_type AS interface_type, r.protocol AS protocol
+    RETURN a.id AS from_node, a.name AS source_name, b.name AS target_name, b.id AS to_node, r.interface_type AS interface_type, r.protocol AS protocol
     """
-    unique_edges: Set[Tuple[str, str, str, str]] = set()
+    unique_edges: Set[Tuple[str, str, str, str, str, str]] = set()
     with driver.session() as session:
         result = session.run(query, ids=asset_ids, interface_type=interface_type)
         for record in result:
             edge = (
                 record["from_node"],
+                record["source_name"],
                 record["to_node"],
+                record["target_name"],
                 record["interface_type"],
                 record.get("protocol", "")
             )
@@ -388,11 +409,13 @@ def get_relationships_by_interface_type(asset_ids: List[str], interface_type: st
     return [
         {
             "from_node": from_node,
+            "source_name": source_name,
             "to_node": to_node,
+            "target_name": target_name,
             "interface_type": itype,
             "protocol": protocol
         }
-        for (from_node, to_node, itype, protocol) in unique_edges
+        for (from_node, source_name, to_node, target_name, itype, protocol) in unique_edges
     ]
 
 # Domain partial search

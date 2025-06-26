@@ -235,6 +235,24 @@ th, td {
     margin-bottom: 5px;
 }
 
+.chat-response table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.chat-response th,
+.chat-response td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.chat-response th {
+    background-color: var(--primary-red);
+    color: white;
+}
+
 /* Added for Interface buttons */
 .interface-buttons {
     margin-top: 15px;
@@ -392,6 +410,12 @@ th, td {
   border-color: var(--primary-red);
 }
 
+.count-button.active {
+    background-color: var(--primary-red);
+    color: white;
+    border-bottom: none;
+}
+
 /* ---- Styled Table ---- */
 .styled-table {
   width: 100%;
@@ -401,9 +425,10 @@ th, td {
 
 .styled-table th,
 .styled-table td {
-  padding: 10px;
-  border: 1px solid #ccc;
-  text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
 }
 
 .styled-table th {
@@ -428,6 +453,7 @@ th, td {
     cursor: pointer;
     font-size: 14px;
     margin-left: 10px;
+    margin-bottom: 10px;
     position: relative;
     padding: 0;
 }
@@ -441,6 +467,7 @@ th, td {
     color: #555;
     display: inline-block;
     margin-left: 10px;
+    margin-bottom: 10px;
 }
 
 .chat-history-collapsible {
@@ -450,7 +477,7 @@ th, td {
 .download-btn {
     float: right;
     padding: 5px 10px;
-    background-color: darkgreen;
+    background-color: var(--primary-red);
     color: white;
     border: none;
     border-radius: 4px;
@@ -460,12 +487,6 @@ th, td {
 /* App explorer */
 
 /* Direction Buttons (Explorer-specific overrides) */
-.direction-buttons {
-    margin-top: 10px;
-    display: flex;
-    gap: 10px;
-}
-
 .depth-control {
     display: flex;
     align-items: center;
@@ -481,18 +502,6 @@ th, td {
     border-radius: 6px;
     cursor: pointer;
     transition: 0.3s ease;
-}
-
-.direction-buttons {
-    background-color: var(--primary-red);
-    color: white;
-    border-color: var(--primary-red);
-}
-
-.direction-buttons  {
-    background-color: var(--primary-red);
-    color: white;
-    border-color: var(--primary-red);
 }
 
 /* Depth Slider Styling */
@@ -545,4 +554,17 @@ input[type="range"] {
 
 .left-panel, .right-panel, .tab-container, .tab-content {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+}
+
+input + label,
+label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: #ddd;
+    margin-bottom: 6px;
+}
+.left-panel label,
+.right-panel label {
+    color: #333;
 }
