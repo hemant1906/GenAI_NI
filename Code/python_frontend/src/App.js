@@ -1,9 +1,71 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import MermaidRenderer from "./MermaidRenderer";
+import ReactMarkdown from "react-markdown";
+import cytoscape from "cytoscape";
+import fcose from "cytoscape-fcose";
+
+// import DiagramViewer from "./DiagramViewer";
 import "./App.css";
 
-function App() {
+cytoscape.use(fcose);
+
+/** New: Diagram Viewer window opener logic using your existing MermaidRenderer and injected React */
+function openDiagramViewer(diagramName, mermaidCode) {
+    const diagramWindow = window.open("", "_blank", "width=800,height=600");
+    if (!diagramWindow) return;
+
+    //    const containerId = "mermaid-container-" + Date.now();
+
+    diagramWindow.document.write(`
+        <html>
+            <head>
+                <title>Diagram Viewer</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f6f8; }
+                    h2 { color: #d9534f; margin-bottom: 20px; }
+                    .download-btn { background: #d9534f; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; }
+                    .diagram-container { background: #fff; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+                </style>
+                <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+            </head>
+            <body>
+                <h2>Diagram: ${diagramName}</h2>
+                <div class="diagram-container">
+                    <pre class="mermaid">${mermaidCode}</pre>
+                </div>
+                <button class="download-btn" id="download-btn">Download AaC</button>
+            </body>
+        </html>
+    `);
+
+    diagramWindow.document.close();
+
+    diagramWindow.onload = () => {
+        if (diagramWindow.mermaid) {
+            diagramWindow.mermaid.initialize({ startOnLoad: true });
+        }
+
+        const downloadBtn = diagramWindow.document.getElementById("download-btn");
+        if (downloadBtn) {
+            downloadBtn.onclick = () => {
+                const blob = new Blob([mermaidCode], { type: "text/plain;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const link = diagramWindow.document.createElement("a");
+                link.href = url;
+                link.download = `${diagramName || "diagram"}.mmd`;
+                link.click();
+                URL.revokeObjectURL(url);
+            };
+        }
+    };
+}
+
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState("upload");
+
+  // Upload States
   const [image, setImage] = useState(null);
   const [assetId, setAssetId] = useState("");
   const [diagramName, setDiagramName] = useState("");
@@ -11,8 +73,236 @@ function App() {
   const [mermaidCode, setMermaidCode] = useState("");
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
+  const [complexityTable, setComplexityTable] = useState([]);
+  const [pros, setPros] = useState([]);
+  const [cons, setCons] = useState([]);
+  const [edges, setEdges] = useState([]);
+  const [nodes, setNodes] = useState([]);
 
-  const handleSubmit = async (e) => {
+  // Chat States
+    const [sessionId, setSessionId] = useState("");
+    const [activeCollection, setActiveCollection] = useState("architecture_diagrams");
+    const [query, setQuery] = useState("");
+    const [chatHistory, setChatHistory] = useState([]);
+  //  const [chatResponse, setChatResponse] = useState("");  Replaced by latestResponse
+    const [latestResponse, setLatestResponse] = useState("");
+    const [showHistory, setShowHistory] = useState(false);
+
+    // Domain and Capability states
+    const [domain, setDomain] = useState('');
+    const [capability, setCapability] = useState('');
+    const [domainSuggestions, setDomainSuggestions] = useState([]);
+    const [capabilitySuggestions, setCapabilitySuggestions] = useState([]);
+    const [interfaceCounts, setInterfaceCounts] = useState([]);
+    const [interfaceResults, setInterfaceResults] = useState([]);
+    const cyRef = useRef();
+
+    // App Connect Explorer States
+    const [appIdInput, setAppIdInput] = useState("");
+    const [appSuggestions, setAppSuggestions] = useState([]);
+    const [direction, setDirection] = useState("Upstream");
+    const [depth, setDepth] = useState(1);
+    const [graphResults, setGraphResults] = useState([]);
+    const cyGraphRef = useRef();
+
+   // Use effect for Graph of Conn explorer
+  useEffect(() => {
+    if (graphResults.length > 0 && cyGraphRef.current) {
+      const cy = cytoscape({
+        container: cyGraphRef.current,
+        elements: [],
+        style: [
+          {
+              selector: 'node',
+              style: {
+                'background-color': '#d9534f',
+                'label': 'data(label)',
+                'color': '#fff',
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'font-size': '8px',
+                'text-wrap': 'wrap',
+                'text-max-width': 40,
+                'width': 50,
+                'height': 50,
+                'border-width': 2,
+                'border-color': '#000'
+              }
+            },
+            {
+              selector: 'edge',
+              style: {
+                'label': 'data(label)',
+                'curve-style': 'bezier',
+                'target-arrow-shape': 'triangle',
+                'line-color': '#000',
+                'target-arrow-color': '#000',
+                'width': 2,
+                'font-size': '8px',
+                'text-background-color': '#fff',
+                'text-background-opacity': 1,
+                'text-background-padding': '2px'
+                }
+            }
+        ],
+        layout: { name: "fcose", animate: true },
+      });
+
+      const addedNodes = new Set();
+      const addedEdges = new Set();
+      graphResults.forEach((item) => {
+        const source = item.n.id;
+        const target = item.m.id;
+        const relType = item.r[1];
+        const sourceLabel = `${item.n.id}: ${item.n.name}`;
+        const targetLabel = `${item.m.id}: ${item.m.name}`;
+        const edgeId = `${source}-${target}-${relType}`;
+
+        if (!addedNodes.has(source)) {
+          cy.add({ data: { id: source, label: sourceLabel, trueId: item.n.id } });
+          addedNodes.add(source);
+        }
+        if (!addedNodes.has(target)) {
+          cy.add({ data: { id: target, label: targetLabel, trueId: item.m.id } });
+          addedNodes.add(target);
+        }
+        if (!addedEdges.has(edgeId)) {
+            cy.add({ data: { id: edgeId, source, target, label: relType } });
+            addedEdges.add(edgeId);
+        }
+      });
+
+      cy.layout({ name: "fcose", animate: true }).run();
+
+      cy.on('tap', 'node', async (event) => {
+                const trueNodeId = event.target.data('trueId');
+                if (!trueNodeId) return;
+
+                try {
+                    const res = await axios.get("http://localhost:7000/diagram_info", {
+                        params: { node_id: trueNodeId }
+                    });
+                    if (res.data && res.data.mermaid_code && res.data.diagram_name) {
+                        openDiagramViewer(res.data.diagram_name, res.data.mermaid_code);
+                    } else {
+                        alert('No diagram associated with this core asset.');
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch diagram info:', err);
+                }
+            });
+    }
+  }, [graphResults]);
+
+  const fetchAppSuggestions = async (val) => {
+    if (val.length >= 3) {
+      try {
+        const res = await axios.get("http://localhost:7000/search_assets", { params: { q: val } });
+        setAppSuggestions(res.data.results || []);
+      } catch (err) {
+        console.error("Error fetching suggestions:", err);
+      }
+    } else {
+      setAppSuggestions([]);
+    }
+  };
+
+  const exploreConnections = async () => {
+    if (!appIdInput) return alert("Please enter an App ID");
+    try {
+      const res = await axios.get("http://localhost:7000/query", {
+        params: { node_id: appIdInput.trim(), type: direction, depth },
+      });
+      setGraphResults(res.data.results || []);
+    } catch (err) {
+      console.error("Failed to explore connections:", err);
+      alert("Failed to explore connections");
+    }
+  };
+
+   // Session ID global logic
+   useEffect(() => {
+        if (!sessionId) {
+            axios.post("http://localhost:7000/generate_session/")
+                .then(res => {
+                    setSessionId(res.data.session_id);
+                    console.log("Session initialized:", res.data.session_id);
+                })
+                .catch(err => console.error("Failed to generate session:", err));
+        }
+    }, [sessionId]);
+
+    // Fetch domain suggestions
+    const fetchDomainSuggestions = async (val) => {
+        if (val.length >= 3) {
+            try {
+                const res = await axios.get('http://localhost:7000/get_domains', { params: { q: val } });
+                setDomainSuggestions(res.data.results || []);
+            } catch (err) {
+                console.error('Error fetching domain suggestions:', err);
+            }
+        } else {
+            setDomainSuggestions([]);
+        }
+    };
+
+    // Fetch capability suggestions
+    const fetchCapabilitySuggestions = async (val) => {
+        if (val.length >= 3) {
+            try {
+                const res = await axios.get('http://localhost:7000/get_capabilities', { params: { q: val } });
+                setCapabilitySuggestions(res.data.results || []);
+            } catch (err) {
+                console.error('Error fetching capability suggestions:', err);
+            }
+        } else {
+            setCapabilitySuggestions([]);
+        }
+    };
+
+    // Fetch interface type counts
+    const fetchInterfaceCounts = async () => {
+        try {
+            if (!domain || !capability) {
+                alert("Please enter both Domain and Capability.");
+                return;
+            }
+
+            const res = await axios.get('http://localhost:7000/get_interface_type_counts', {
+                params: { domain, capability }
+            });
+
+             if (Array.isArray(res.data) && res.data.length > 0) {
+                setInterfaceCounts(res.data);
+                setInterfaceResults([]);
+             } else {
+                setInterfaceCounts([]);
+                setInterfaceResults([]);
+                alert("No interfaces found for the given Domain and Capability.");
+             }
+        } catch (err) {
+            console.error('Error fetching interface counts:', err);
+            alert("Failed to fetch interface counts. Check if Domain and Capability exist.");
+        }
+    };
+
+    // Fetch nodes by domain, capability, and interface type
+    const fetchNodesByInterfaceType = async (type) => {
+        try {
+            const res = await axios.get('http://localhost:7000/get_nodes_by_d_c_interface', {
+                params: { domain, capability, interface_type: type }
+            });
+            setInterfaceResults(res.data.results);
+        } catch (err) {
+            console.error('Error fetching nodes:', err);
+        }
+    };
+
+  const handleImageChange = (event) => {
+        setImage(event.target.files[0]);
+    };
+
+  const handleUpload = async (e) => {
     e.preventDefault();
     if (!image || !assetId || !diagramName) {
       alert("Please fill all fields.");
@@ -21,17 +311,22 @@ function App() {
 
     const formData = new FormData();
     formData.append("image", image);
-    formData.append("asset_id", assetId);
     formData.append("diagram_name", diagramName);
+    formData.append("asset_id", assetId);
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:8001/upload/", formData);
-      const { mermaid_code, summary, description } = res.data;
+      const res= await axios.post("http://localhost:7000/upload/", formData, {headers: { "Content-Type": "multipart/form-data" },});
+      const { mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons } = res.data;
       const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
       setMermaidCode(String(cleanCode));
       setSummary(summary);
       setDescription(description);
+      setNodes(nodes || []);
+      setEdges(edges || []);
+      setComplexityTable(complexity_table || []);
+      setPros(pros || []);
+      setCons(cons || []);
     } catch (err) {
       console.error("Upload failed:", err);
       alert("Upload failed. Check console.");
@@ -40,61 +335,444 @@ function App() {
     }
   };
 
+    const handleChatSubmit = () => {
+        if (!query || !sessionId) return;
+
+        const formData = new FormData();
+        formData.append("query", query);
+        formData.append("collection", activeCollection);
+        formData.append("session_id", sessionId);
+
+        axios.post("http://localhost:7000/chat/", formData)
+            .then(res => {
+                const data = res.data;
+                setLatestResponse(data.response || "");
+                setChatHistory([...chatHistory, { question: query, answer: data.response }]);
+                setQuery("");
+            })
+            .catch(err => console.error(err));
+    };
+
+    /* Handle Download AaC */
+    const downloadMermaid = () => {
+        const blob = new Blob([mermaidCode], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${diagramName || "diagram"}.mmd`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
+    /* Handle reset session */
+    const handleResetSession = () => {
+        if (!sessionId) return;
+
+        const formData = new FormData();
+        formData.append("session_id", sessionId);
+        axios.post("http://localhost:7000/reset_session/", formData)
+            .then(() => {
+                setChatHistory([]);
+                setLatestResponse("");
+                setShowHistory(false);
+                console.log("Session reset successful");
+
+         // Generate new session
+            axios.post("http://localhost:7000/generate_session/")
+                .then(res => {
+                    setSessionId(res.data.session_id);
+                    console.log("New session started:", res.data.session_id);
+                })
+                .catch(err => console.error("Failed to generate new session:", err));
+            })
+            .catch(err => console.error("Reset failed:", err));
+    };
+
+    /* For domain_view */
+
+    useEffect(() => {
+        if (interfaceResults.length > 0 && cyRef.current) {
+          const cy = cytoscape({
+            container: cyRef.current,
+            elements: [],
+            style: [
+              {
+                selector: 'node',
+                style: {
+                  'background-color': '#d9534f',
+                  'label': 'data(label)',
+                  'color': '#fff',
+                  'text-valign': 'center',
+                  'text-halign': 'center',
+                  'font-size': '10px',
+                  'width': 40,
+                  'height': 40,
+                  'border-width': 2,
+                  'border-color': '#000'
+                }
+              },
+              {
+                selector: 'edge',
+                style: {
+                  'label': 'data(label)',
+                  'curve-style': 'bezier',
+                  'target-arrow-shape': 'triangle',
+                  'line-color': '#000',
+                  'target-arrow-color': '#000',
+                  'width': 2,
+                  'font-size': '8px',
+                  'text-background-color': '#fff',
+                  'text-background-opacity': 1,
+                  'text-background-padding': '2px'
+                }
+              }
+            ],
+            layout: { name: 'fcose', animate: true }
+          });
+
+          const addedNodes = new Set();
+
+          interfaceResults.forEach(row => {
+            const source = row.from_node;
+            const target = row.to_node;
+
+            if (!addedNodes.has(source)) {
+              cy.add({ data: { id: source, label: source } });
+              addedNodes.add(source);
+            }
+            if (!addedNodes.has(target)) {
+              cy.add({ data: { id: target, label: target } });
+              addedNodes.add(target);
+            }
+
+            cy.add({ data: { id: `${source}-${target}-${row.interface_type}`, source, target, label: row.interface_type } });
+          });
+
+          cy.layout({ name: 'fcose', animate: true }).run();
+        }
+      }, [interfaceResults]);
+
   return (
-    <div className="app-container">
-      <h1 className="app-title">🧠 Diagram Uploader & Visualizer</h1>
-      <div className="main-content">
-        {/* Left: Input Panel */}
-        <div className="left-pane">
-          <form className="upload-form" onSubmit={handleSubmit}>
-            <label>
-              Upload Image:
-              <input type="file" accept="image/png, image/jpeg" onChange={(e) => setImage(e.target.files[0])} />
-            </label>
+        <div className="container">
+            <h2 className="app-title">Architecture Insight Generator</h2>
+            <div className="tab-container">
+                {/* Tabs */}
+                <div className="tabs">
+                    <button className={`tab-button ${activeTab === "upload" ? "active" : ""}`} onClick={() => setActiveTab("upload")}>Upload Diagram</button>
+                    <button className={`tab-button ${activeTab === "explorer" ? "active" : ""}`} onClick={() => setActiveTab("explorer")}>App Connect Explorer</button>
+                    <button className={`tab-button ${activeTab === "chat" ? "active" : ""}`} onClick={() => setActiveTab("chat")}>Talk to Systems</button>
+                    <button className={`tab-button ${activeTab === "domain_view" ? "active" : ""}`} onClick={() => setActiveTab("domain_view")}>Domain and Capability View</button>
+                </div>
+            </div>
+            <div className="tab-content">
+            {/* Upload Tab */}
+            {activeTab === "upload" && (
+                <div className="flex-layout">
+                    <div className="left-panel">
+                        <h2>Upload Diagram</h2>
+                        <input type="file" onChange={handleImageChange} /><br />
+                        <input
+                            type="text"
+                            placeholder="Core Asset ID"
+                            value={assetId}
+                            onChange={(e) => setAssetId(e.target.value)}
+                        /><br />
+                        <input
+                            type="text"
+                            placeholder="Diagram Name"
+                            value={diagramName}
+                            onChange={(e) => setDiagramName(e.target.value)}
+                        /><br />
+                        <button className="primary-button" onClick={handleUpload} disabled={loading}>
+                            {loading ? "Uploading and Generating Insights..." : "Upload"}
+                        </button>
+                    </div>
 
-            <label>
-              Asset ID:
-              <input type="text" value={assetId} onChange={(e) => setAssetId(e.target.value)} />
-            </label>
+                    <div className="right-panel">
+                        {mermaidCode && (
+                            <>
+                                <h3>Mermaid Diagram</h3>
+                                <MermaidRenderer chart={mermaidCode} />
+                                <button className="download-btn" onClick={downloadMermaid}>
+                                    Download AaC
+                                </button>
+                            </>
+                        )}
 
-            <label>
-              Diagram Name:
-              <input type="text" value={diagramName} onChange={(e) => setDiagramName(e.target.value)} />
-            </label>
+                        {summary && (
+                            <>
+                                <h3>Summary</h3>
+                                <p>{summary}</p>
+                            </>
+                        )}
 
-            <button type="submit" disabled={loading}>
-              {loading ? "Processing..." : "Upload & Convert"}
-            </button>
-          </form>
+                        {description && (
+                            <>
+                                <h3>Description</h3>
+                                <p>{description}</p>
+                            </>
+                        )}
+
+                        {complexityTable.length > 0 && (
+                            <>
+                                <h3>System Complexity Table</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Component</th>
+                                            <th>Complexity</th>
+                                            <th>Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {complexityTable.map((entry, index) => (
+                                            <tr key={index}>
+                                                <td>{entry.component}</td>
+                                                <td>{entry.complexity}</td>
+                                                <td>{entry.reason}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </>
+                        )}
+
+                        {pros.length > 0 && (
+                            <>
+                                <h3>Pros</h3>
+                                <ul>
+                                    {pros.map((item, index) => (
+                                        <li key={index}>{item}</li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {cons.length > 0 && (
+                            <>
+                                <h3>Cons</h3>
+                                <ul>
+                                    {cons.map((item, index) => (
+                                        <li key={index}>{item}</li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {edges.length > 0 && (
+                            <>
+                                <h3>Integration Table</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Source</th>
+                                            <th>Target</th>
+                                            <th>Integration Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {edges.map((edge, index) => (
+                                            <tr key={index}>
+                                                <td>{edge.source}</td>
+                                                <td>{edge.target}</td>
+                                                <td>{edge.label}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </>
+                        )}
+
+                        {nodes.length > 0 && (
+                            <>
+                                <h3>Asset Table</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>App ID</th>
+                                            <th>App Name</th>
+                                            <th>Group</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {nodes.map((app, index) => (
+                                            <tr key={index}>
+                                                <td>{app.id}</td>
+                                                <td>{app.name}</td>
+                                                <td>{app.group}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* App Connect Explorer */}
+            {activeTab === "explorer" && (
+                <div className="flex-layout">
+                  <div className="left-panel">
+                    <h2>App Connect Explorer</h2>
+                    <label>Enter App ID:</label>
+                    <div className="suggestion-wrapper">
+                      <input type="text" className="input-box" value={appIdInput} onChange={(e) => { setAppIdInput(e.target.value); fetchAppSuggestions(e.target.value); }} placeholder="Start typing App ID" />
+                      {appSuggestions.length > 0 && (
+                          <ul className="suggestion-list">
+                            {appSuggestions.map((s, i) => (
+                              <li key={i} onClick={() => { setAppIdInput(s.id); setAppSuggestions([]); }}>
+                                {s.id} ({s.domain} - {s.capability})
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                    </div>
+
+                    <label>Select direction:</label>
+                    <div className="direction-buttons">
+                      {['Upstream', 'Downstream', 'Both'].map((dir) => (
+                        <button key={dir} className={`count-button ${direction === dir ? "active" : ""}`} onClick={() => setDirection(dir)}>{dir}</button>
+                      ))}
+                    </div>
+
+                    <div className="depth-control">
+                        <label>Depth: {depth}</label>
+                        <input type="range" min="1" max="5" value={depth} onChange={(e) => setDepth(Number(e.target.value))} />
+                        <span>{depth}</span>
+                    </div>
+
+                    <button className="primary-button" onClick={exploreConnections}>Explore Connections</button>
+                  </div>
+
+                  <div className="right-panel">
+                    {graphResults.length > 0 ? (
+                      <div ref={cyGraphRef} style={{ height: 500, border: "1px solid #ccc", marginTop: 20 }} />
+                    ) : (
+                      <p>No graph to display. Enter details and click Explore.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            {/* Chat Tab */}
+            {activeTab === "chat" && (
+                <div className="chat-section">
+                    <div style={{ display: "flex", alignItems: "center", marginTop: "10px" }}>
+                        <span className="session-id-label">Session ID: {sessionId}</span>
+                        <button
+                            className="reset-session-btn"
+                            title="Reset"
+                            onClick={handleResetSession}
+                        >
+                            ⟳
+                        </button>
+                    </div>
+                    <div className="collection-tabs">
+                        <button className={activeCollection === "architecture_diagrams" ? "active" : ""} onClick={() => setActiveCollection("architecture_diagrams")}>Diagrams</button>
+                        <button className={activeCollection === "architecture_applications" ? "active" : ""} onClick={() => setActiveCollection("architecture_applications")}>Applications</button>
+                        <button className={activeCollection === "architecture_complexity" ? "active" : ""} onClick={() => setActiveCollection("architecture_complexity")}>Complexities</button>
+                    </div>
+                    <div className="chat-input">
+                        <textarea placeholder="Ask your question..." value={query} onChange={(e) => setQuery(e.target.value)} />
+                        <button onClick={handleChatSubmit}>Send</button>
+                    </div>
+
+                    <div className="chat-latest">
+                        <h3>Latest Response:</h3>
+                        <div className="chat-response">
+                            <ReactMarkdown>{latestResponse}</ReactMarkdown>
+                        </div>
+                    </div>
+
+                    <div className="chat-history-collapsible">
+                        <button className="primary-button" onClick={() => setShowHistory(!showHistory)}>
+                            {showHistory ? "Hide History" : "Show History"}
+                        </button>
+                        {showHistory && (
+                            <div className="chat-history">
+                                {chatHistory.map((chat, index) => (
+                                    <div key={index} className="chat-history-item">
+                                        <p><strong>You:</strong> {chat.question}</p>
+                                        <p><strong>System:</strong> {chat.answer}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Domain and Capability View */}
+            {activeTab === "domain_view" && (
+                <div className="flex-layout">
+                  <div className="left-panel">
+                    <h2>Domain and Capability View</h2>
+
+                    <label>Domain Name</label>
+                    <div className="suggestion-wrapper">
+                      <input type="text" className="input-box" value={domain} onChange={(e) => { setDomain(e.target.value); fetchDomainSuggestions(e.target.value); }} placeholder="Enter Domain Name" />
+                      {domainSuggestions.length > 0 && (
+                        <ul className="suggestion-list">
+                          {domainSuggestions.map((s, i) => <li key={i} onClick={() => { setDomain(s); setDomainSuggestions([]); }}>{s}</li>)}
+                        </ul>
+                      )}
+                    </div>
+
+                    <label>Capability Name</label>
+                    <div className="suggestion-wrapper">
+                      <input type="text" className="input-box" value={capability} onChange={(e) => { setCapability(e.target.value); fetchCapabilitySuggestions(e.target.value); }} placeholder="Enter Capability Name" />
+                      {capabilitySuggestions.length > 0 && (
+                        <ul className="suggestion-list">
+                          {capabilitySuggestions.map((s, i) => <li key={i} onClick={() => { setCapability(s); setCapabilitySuggestions([]); }}>{s}</li>)}
+                        </ul>
+                      )}
+                    </div>
+
+                    <button className="primary-button" onClick={fetchInterfaceCounts}>Explore Interfaces</button>
+
+                    <div className="interface-buttons">
+                      {interfaceCounts.map((item, idx) => {
+                        const type = Object.keys(item)[0];
+                        const count = item[type];
+                        return (
+                          <button key={idx} className="count-button" onClick={() => fetchNodesByInterfaceType(type)}>{type}: {count}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="right-panel">
+                    {interfaceResults.length > 0 && (
+                      <table className="styled-table">
+                        <thead>
+                          <tr>
+                            <th>From Application</th>
+                            <th>To Application</th>
+                            <th>Interface Type</th>
+                            <th>Protocol</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {interfaceResults.map((row, idx) => (
+                            <tr key={idx}>
+                              <td>{row.from_node}</td>
+                              <td>{row.to_node}</td>
+                              <td>{row.interface_type}</td>
+                              <td>{row.protocol}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+
+                    {interfaceResults.length > 0 && (
+                      <div ref={cyRef} style={{ height: 500, border: '1px solid #ccc', marginTop: 20 }} />
+                    )}
+                  </div>
+                </div>
+              )}
+              </div>
         </div>
-
-        {/* Right: Output Panel */}
-        <div className="right-pane">
-          {mermaidCode && (
-            <div className="output-section">
-              <h2>📈 Mermaid Diagram</h2>
-              <MermaidRenderer chart={mermaidCode} />
-            </div>
-          )}
-
-          {summary && (
-            <div className="output-section">
-              <h2>📝 Summary</h2>
-              <h4>{diagramName}</h4>
-              <p>{summary}</p>
-            </div>
-          )}
-
-          {description && (
-            <div className="output-section">
-              <h2>📚 Description</h2>
-              <p>{description}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+    );
 }
-
-export default App;
