@@ -139,15 +139,13 @@ The output must contain one clearly separated block per application, using the s
         
         result = gemini_resp.json()
 
-        '''
+        '''        
         
         with open("test_response_genai_3.json", "w") as f:
             json.dump(gemini_resp.json(), f, indent=2)
 
-        
         with open("test_response_genai_3.json", "r") as f:
             result = json.load(f)
-
         '''
 
         if "candidates" not in result:

@@ -157,30 +157,33 @@ th, td {
 /* Chat Input Area */
 .chat-input {
     display: flex;
-    justify-content: center;
-    margin-bottom: 15px;
+    flex-direction: column; /* Stack textarea and button vertically */
+    align-items: flex-start; /* Align button to left, can be center if desired */
+    gap: 10px;
+    margin-top: 10px;
 }
 
 .chat-input textarea {
-    width: 60%;
+    max-width: 80%;
+    margin: 20px auto;
+    padding: 15px;
     height: 60px;
-    padding: 10px;
     resize: vertical;
     border-radius: 4px;
     border: 1px solid #ccc;
 }
 
-.chat-input button {
-    margin-left: 10px;
-    padding: 20px;
+.chat-send-btn {
+    padding: 6px 14px;
+    font-size: 0.9rem;
     background-color: #4CAF50;
-    border: none;
     color: white;
-    cursor: pointer;
+    border: none;
     border-radius: 4px;
+    cursor: pointer;
 }
 
-.chat-input button:hover {
+.chat-send-btn:hover {
     background-color: #45a049;
 }
 
@@ -567,4 +570,35 @@ label {
 .left-panel label,
 .right-panel label {
     color: #333;
+}
+
+.upload-animation {
+    margin-top: 15px;
+    font-size: 0.75rem; /* Reduce overall icon size */
+    animation: pulse 1.5s infinite;
+    text-align: center;
+    word-break: break-word; /* Ensure wrapping if space is tight */
+}
+
+.upload-animation span {
+    font-size: 0.5rem; /* Optional: per-icon control */
+    margin: 0 3px;
+}
+
+.send-container {
+    display: flex;
+    flex-direction: row; /* Place button and icon side by side */
+    align-items: center;
+    gap: 6px;
+}
+
+.sending-icon {
+    font-size: 1.2rem;
+    animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
 }

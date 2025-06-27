@@ -86,6 +86,7 @@ export default function App() {
   //  const [chatResponse, setChatResponse] = useState("");  Replaced by latestResponse
     const [latestResponse, setLatestResponse] = useState("");
     const [showHistory, setShowHistory] = useState(false);
+    const [sending, setSending] = useState(false);
 
     // Domain and Capability states
     const [domain, setDomain] = useState('');
@@ -335,21 +336,26 @@ export default function App() {
     }
   };
 
-    const handleChatSubmit = () => {
+    const handleChatSubmit = async () => {
         if (!query || !sessionId) return;
+
+        setSending(true);
 
         const formData = new FormData();
         formData.append("query", query);
         formData.append("session_id", sessionId);
 
-        axios.post("http://localhost:7000/chat/", formData)
-            .then(res => {
-                const data = res.data;
-                setLatestResponse(data.response || "");
-                setChatHistory([...chatHistory, { question: query, answer: data.response }]);
-                setQuery("");
-            })
-            .catch(err => console.error(err));
+        try {
+            const res = await axios.post("http://localhost:7000/chat/", formData);
+            const data = res.data;
+            setLatestResponse(data.response || "");
+            setChatHistory([...chatHistory, { question: query, answer: data.response }]);
+            setQuery("");
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSending(false);
+        }
     };
 
     /* Handle Download AaC */
@@ -491,6 +497,12 @@ export default function App() {
                         <button className="primary-button" onClick={handleUpload} disabled={loading}>
                             {loading ? "Uploading and Generating Insights..." : "Upload"}
                         </button>
+                        {/* Animation appears below button during loading */}
+                            {loading && (
+                                <div className="upload-animation">
+                                    <div className="upload-step">📄 File ➔ 🤖 GenAI ➔ 🗄️ PGSQL ➔ 🌐 Neo4j ➔ 💾 Vector ➔ ✅ Output</div>
+                                </div>
+                            )}
                     </div>
 
                     <div className="right-panel">
@@ -675,7 +687,10 @@ export default function App() {
                     </div>
                     <div className="chat-input">
                         <textarea placeholder="Ask your question..." value={query} onChange={(e) => setQuery(e.target.value)} />
-                        <button onClick={handleChatSubmit}>Send</button>
+                        <div className="send-container">
+                            <button className="chat-send-btn" onClick={handleChatSubmit} disabled={sending}>{sending ? "Agent working..." : "Chat with Agent"}</button>
+                            {sending && <span className="sending-icon">⏳</span>}
+                        </div>
                     </div>
 
                     <div className="chat-latest">
