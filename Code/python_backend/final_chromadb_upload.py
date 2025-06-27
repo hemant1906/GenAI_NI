@@ -51,7 +51,7 @@ Relationships:
         ids=[f"app_{app_data['system_code']}_{app_data['diagram_id']}"]
     )
 
-def store_complexity_entry(diagram_id, component, complexity, reason):
+def store_complexity_entry(diagram_id, diagram_name, component, complexity, reason):
     content = f"""Component: {component}
 Complexity: {complexity}
 Reason: {reason}
@@ -59,6 +59,7 @@ Reason: {reason}
 
     metadata = {
         "diagram_id": diagram_id,
+        "diagram_name": diagram_name,
         "component": component,
         "complexity": complexity,
         "type": "complexity"

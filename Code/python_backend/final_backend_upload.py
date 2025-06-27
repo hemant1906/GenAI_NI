@@ -260,7 +260,7 @@ The output must contain one clearly separated block per application, using the s
 
         # Store complexity data
         for entry in complexity_table:
-            store_complexity_entry(diagram_id, entry['component'], entry['complexity'], entry['reason'])
+            store_complexity_entry(diagram_id, diagram_name, entry['component'], entry['complexity'], entry['reason'])
 
         return {
             "diagram_id": diagram_id,
