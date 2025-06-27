@@ -49,7 +49,7 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
 
         # Image to base64
         img_b64 = base64.b64encode(image.file.read()).decode()
-        '''
+
         # Structured Gemini Prompt
         prompt = """
         You are an expert Enterprise Architect. Analyze the provided system architecture diagram. From the diagram, extract the following:
@@ -139,14 +139,16 @@ The output must contain one clearly separated block per application, using the s
         
         result = gemini_resp.json()
 
+        '''
         
         with open("test_response_genai_3.json", "w") as f:
             json.dump(gemini_resp.json(), f, indent=2)
 
-        '''
+        
         with open("test_response_genai_3.json", "r") as f:
             result = json.load(f)
 
+        '''
 
         if "candidates" not in result:
             raise HTTPException(status_code=500, detail=result)
