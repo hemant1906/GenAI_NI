@@ -52,9 +52,17 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
         '''
         # Structured Gemini Prompt
         prompt = """
-You are an expert Enterprise Architect. Analyze the provided system architecture diagram. From the diagram, extract the following:
+        You are an expert Enterprise Architect. Analyze the provided system architecture diagram. From the diagram, extract the following:
 
-1. **Mermaid** (Clean Mermaid diagram code starting with 'graph TD'. Exclude ```mermaid or other wrappers. Relationships between systems must be represented in [Source System Code] -->|[Relationship Type]| [Target System Code] format. For example: APP001 -->|API| APP002. Keep the subgraph information in the mermaid diagram code. Do not remove it. Also exclude <br> </br> in subgraphs from response.)
+1. **Mermaid** (The code must follow these specific formatting rules:
+- DO NOT include word Mermaid or ```mermaid or other wrappers in the output. The code block should start with graph TD (instead of Mermaid title)
+- Include a comment line with the group name before each subgraph, e.g., %% Digital Channels.
+- The subgraph name itself must be in double quotes, e.g., subgraph "Digital Channels".
+- Application node definitions must not have double quotes around the title, e.g., PBCP[Private Banking Client Portal].
+- Include a %% Connections comment before listing the relationships.
+- Relationships between systems must be represented in [Source System Code] -->|[Relationship Type]| [Target System Code] format. For example: APP001 -->|API| APP002.
+- Remove any special characters like - or hyphen from the relationship type in [Source System Code] -->|[Relationship Type]| [Target System Code].
+- Exclude <br> or </br> tags from the code.)
 2. **Summary** (max 50 words)
 3. **Description** (max 200 words)
 4. **Applications List**, for each:
@@ -80,6 +88,7 @@ You are an expert Enterprise Architect. Analyze the provided system architecture
 Format your response as:
 
 **Mermaid**  
+(The Mermaid code block should start here, without a title)
 ...  
 
 **Summary**  
@@ -555,7 +564,7 @@ def parse_mermaid(mermaid_code):
 
         # Detect node definitions
         elif "[" in line and "]" in line:
-            node_match = re.match(r'(\w+)\s*\[\s*"(.*?)"\s*\]', line)
+            node_match = re.match(r'(\w+)\s*\[\s*(.*?)\s*\]', line)
             if node_match:
                 node_id = node_match.group(1).strip()
                 label_text = node_match.group(2).strip()
