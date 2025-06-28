@@ -167,7 +167,8 @@ The output must contain one clearly separated block per application, using the s
 
         for i, section in enumerate(sections):
             if section.strip().lower() == "mermaid":
-                mermaid = sections[i + 1].strip()
+                mermaid_code = sections[i + 1].strip()
+                mermaid = clean_mermaid_code(mermaid_code)
             elif section.strip().lower() == "summary":
                 summary = sections[i + 1].strip()
             elif section.strip().lower() == "description":
@@ -541,6 +542,14 @@ def get_diagram_info(node_id: str = Query(...)):
         }
 
 # --- Utilities --- #
+
+def clean_mermaid_code(raw: str) -> str:
+    lines = raw.strip().splitlines()
+    if lines[0].strip().startswith("```"):  # First line is ```mermaid or similar
+        lines = lines[1:]
+    if lines and lines[-1].strip().startswith("```"):  # Last line is ```
+        lines = lines[:-1]
+    return "\n".join(lines).strip()
 
 def extract_between(text, start, end):
     return text.split(start, 1)[-1].split(end, 1)[0]
