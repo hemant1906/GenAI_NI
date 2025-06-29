@@ -49,7 +49,7 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
 
         # Image to base64
         img_b64 = base64.b64encode(image.file.read()).decode()
-        '''
+
         # Structured Gemini Prompt
         prompt = """
         You are an expert Enterprise Architect. Analyze the provided system architecture diagram. From the diagram, extract the following:
@@ -139,16 +139,17 @@ The output must contain one clearly separated block per application, using the s
         
         result = gemini_resp.json()
 
-               
+        '''       
         
         with open("test_response_genai_3.json", "w") as f:
             json.dump(gemini_resp.json(), f, indent=2)
         
-        '''
+        
         with open("test_response_genai_3.json", "r") as f:
             result = json.load(f)
-
-        print('loaded')
+        
+        '''
+        # print('loaded')
 
         if "candidates" not in result:
             raise HTTPException(status_code=500, detail=result)
@@ -171,13 +172,13 @@ The output must contain one clearly separated block per application, using the s
             if section.strip().lower() == "mermaid":
                 mermaid_code = sections[i + 1].strip()
                 mermaid = clean_mermaid_code(mermaid_code)
-                print('mermaid done')
+                # print('mermaid done')
             elif section.strip().lower() == "summary":
                 summary = sections[i + 1].strip()
-                print('summary done')
+                # print('summary done')
             elif section.strip().lower() == "description":
                 description = sections[i + 1].strip()
-                print('description done')
+                # print('description done')
             elif section.strip().lower() == "applications":
                 apps_text = sections[i + 1].strip()
                 app_blocks = re.split(r"-\s*Title:", apps_text)
@@ -199,7 +200,7 @@ The output must contain one clearly separated block per application, using the s
                         "group": group,
                         "relationships": relationships
                     })
-                    print('application done')
+                    # print('application done')
             elif "System Complexity Table" in section:
                 table_text = sections[i + 1].strip()
                 rows = table_text.splitlines()[2:]  # Skip header lines
@@ -212,7 +213,7 @@ The output must contain one clearly separated block per application, using the s
                             "complexity": cols[1],
                             "reason": cols[2]
                         })
-                print('complexity done')
+                # print('complexity done')
             elif section.strip().lower() == "pros":
                 raw_pros = sections[i + 1].strip()
                 pros = [
@@ -220,7 +221,7 @@ The output must contain one clearly separated block per application, using the s
                     for line in raw_pros.splitlines()
                     if line.strip().startswith("-")
                 ]
-                print('pros done')
+                # print('pros done')
             elif section.strip().lower() == "cons":
                 raw_cons = sections[i + 1].strip()
                 cons = [
@@ -228,7 +229,7 @@ The output must contain one clearly separated block per application, using the s
                     for line in raw_cons.splitlines()
                     if line.strip().startswith("-")
                 ]
-                print('cons done')
+                # print('cons done')
 
         # Store Mermaid to PostgreSQL
         diagram_id = f"DIAGRAM_{str(uuid4())[:8]}"
@@ -248,17 +249,18 @@ The output must contain one clearly separated block per application, using the s
                     (asset_id, diagram_id),
                 )
             PG_CONN.commit()
-        print('pgsql done')
+        # print('pgsql done')
 
         # Store Mermaid to Neo4j
         nodes, edges = parse_mermaid(mermaid)
-        print('neo4j entered')
+        # print('neo4j entered')
         with driver.session() as session:
             session.execute_write(store_graph, diagram_id, nodes, edges)
-        print('neo4j done')
+        # print('neo4j done')
 
         # Store diagram-level doc
         store_diagram_summary(diagram_id, diagram_name, summary, description, pros, cons)
+        # print('vector db for diagram done')
 
         # Store each application separately
         for app in applications:
@@ -270,10 +272,12 @@ The output must contain one clearly separated block per application, using the s
                 "diagram_id": diagram_id,
                 "diagram_name": diagram_name
             })
+        # print('vector db for applications done')
 
         # Store complexity data
         for entry in complexity_table:
             store_complexity_entry(diagram_id, diagram_name, entry['component'], entry['complexity'], entry['reason'])
+        # print('vector db for complexity done')
 
         return {
             "diagram_id": diagram_id,
