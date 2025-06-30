@@ -78,6 +78,9 @@ export default function App() {
   const [cons, setCons] = useState([]);
   const [edges, setEdges] = useState([]);
   const [nodes, setNodes] = useState([]);
+  /* View diagram const definitions*/
+  const [archName, setArchName] = useState('');
+  const [archSuggestions, setArchSuggestions] = useState([]);
 
   // Chat States
     const [sessionId, setSessionId] = useState("");
@@ -299,6 +302,20 @@ export default function App() {
         }
     };
 
+  // View Diagram - Fetch architecture name suggestions
+    const fetchArchSuggestions = async (val) => {
+        if (val.length >= 3) {
+            try {
+                const res = await axios.get('http://localhost:7000/get_arch_names', { params: { q: val } });
+                setArchSuggestions(res.data.results || []);
+            } catch (err) {
+                console.error('Error fetching architecture name suggestions:', err);
+            }
+        } else {
+            setArchSuggestions([]);
+        }
+    };
+
   const handleImageChange = (event) => {
         setImage(event.target.files[0]);
     };
@@ -317,6 +334,15 @@ export default function App() {
 
     try {
       setLoading(true);
+      // Clear existing outputs before new upload
+      setMermaidCode('');
+      setSummary('');
+      setDescription('');
+      setPros([]);
+      setCons([]);
+      setEdges([]);
+      setNodes([]);
+      setComplexityTable([]);
       const res= await axios.post("http://localhost:7000/upload/", formData, {headers: { "Content-Type": "multipart/form-data" },});
       const { mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons } = res.data;
       const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
@@ -333,6 +359,36 @@ export default function App() {
       alert("Upload failed. Check console.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // View architecture - handler for button
+  const handleViewDiagram = async (e) => {
+    e.preventDefault();
+    if (!archName) {
+      alert("Please fill architecture name.");
+      return;
+    }
+
+    try {
+      // Clear all other states except mermaidCode
+      setMermaidCode('');
+      setSummary('');
+      setDescription('');
+      setPros([]);
+      setCons([]);
+      setEdges([]);
+      setNodes([]);
+      setComplexityTable([]);
+
+      const res= await axios.get("http://localhost:7000/get_arch_code", { params: { arch_name: archName }});
+      const { arch_name, mermaid_code } = res.data;
+      const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
+      setArchName(arch_name);
+      setMermaidCode(String(cleanCode));
+    } catch (err) {
+      console.error("Architecture loading failed:", err);
+      alert("Architecture loading failed. Check console.");
     }
   };
 
@@ -469,7 +525,7 @@ export default function App() {
             <div className="tab-container">
                 {/* Tabs */}
                 <div className="tabs">
-                    <button className={`tab-button ${activeTab === "upload" ? "active" : ""}`} onClick={() => setActiveTab("upload")}>Upload Diagram</button>
+                    <button className={`tab-button ${activeTab === "upload" ? "active" : ""}`} onClick={() => setActiveTab("upload")}>View or Upload Architecture</button>
                     <button className={`tab-button ${activeTab === "explorer" ? "active" : ""}`} onClick={() => setActiveTab("explorer")}>App Connect Explorer</button>
                     <button className={`tab-button ${activeTab === "chat" ? "active" : ""}`} onClick={() => setActiveTab("chat")}>Talk to Systems</button>
                     <button className={`tab-button ${activeTab === "domain_view" ? "active" : ""}`} onClick={() => setActiveTab("domain_view")}>Domain and Capability View</button>
@@ -480,7 +536,7 @@ export default function App() {
             {activeTab === "upload" && (
                 <div className="flex-layout">
                     <div className="left-panel">
-                        <h2>Upload Diagram</h2>
+                        <h3>Upload Architecture</h3>
                         <input type="file" onChange={handleImageChange} /><br />
                         <input
                             type="text"
@@ -503,6 +559,19 @@ export default function App() {
                                     <div className="upload-step">📄 File ➔ 🤖 GenAI ➔ 🗄️ PGSQL ➔ 🌐 Neo4j ➔ 💾 Vector ➔ ✅ Output</div>
                                 </div>
                             )}
+                        {/* View Architecture - sub item in upload tab*/}
+                        <hr />
+                        <h3>View Architecture</h3>
+                            <label>Architecture Name</label>
+                            <div className="suggestion-wrapper">
+                              <input type="text" className="input-box" value={archName} onChange={(e) => { setArchName(e.target.value); fetchArchSuggestions(e.target.value); }} placeholder="Enter Architecture Name" />
+                              {archSuggestions.length > 0 && (
+                                <ul className="suggestion-list">
+                                  {archSuggestions.map((s, i) => <li key={i} onClick={() => { setArchName(s); setArchSuggestions([]); }}>{s}</li>)}
+                                </ul>
+                              )}
+                            </div>
+                            <button className="primary-button" onClick={handleViewDiagram}>Click to View</button>
                     </div>
 
                     <div className="right-panel">

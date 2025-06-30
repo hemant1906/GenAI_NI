@@ -139,16 +139,17 @@ The output must contain one clearly separated block per application, using the s
         
         result = gemini_resp.json()
 
-        '''       
+        '''     
         
         with open("test_response_genai_3.json", "w") as f:
             json.dump(gemini_resp.json(), f, indent=2)
         
-        
+
         with open("test_response_genai_3.json", "r") as f:
             result = json.load(f)
         
         '''
+
         # print('loaded')
 
         if "candidates" not in result:
@@ -294,6 +295,33 @@ The output must contain one clearly separated block per application, using the s
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- View or Add architecture Section --- #
+
+# Architecture name partial search
+@app.get("/get_arch_names")
+def autocomplete_arch_names(q: str = Query(..., min_length=3)):
+    with PG_CONN.cursor() as cur:
+        cur.execute("SELECT DISTINCT diagram_name FROM diagrams WHERE diagram_name ILIKE %s", (f"{q}%",))
+        rows = cur.fetchall()
+        matches = [row[0] for row in rows if row[0]]
+        PG_CONN.commit()
+    return {"results": matches}
+
+@app.get("/get_arch_code")
+def get_arch_code(arch_name: str = Query(...)):
+    print('Entered')
+    print(arch_name)
+    with PG_CONN.cursor() as cur:
+        cur.execute("SELECT diagram_mermaid_code FROM diagrams WHERE diagram_name = %s ORDER BY UPDATED_AT DESC", (arch_name,))
+        result = cur.fetchone()
+        print(result)
+        if not result:
+            return JSONResponse(status_code=404, content={"error": "No diagram found with this name"})
+
+        return {
+            "arch_name": arch_name,
+            "mermaid_code": result[0]
+        }
 # --- Chat Section with simple RAM based chat history --- #
 
 def infer_collection(prompt: str) -> str:
