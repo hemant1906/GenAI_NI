@@ -139,15 +139,13 @@ The output must contain one clearly separated block per application, using the s
         
         result = gemini_resp.json()
 
-        '''     
+        '''
+        filename = f"test_response_core_asset_{asset_id}.json"
+        with open(filename, "w") as f:
+            json.dump(result, f, indent=2)
         
-        with open("test_response_genai_3.json", "w") as f:
-            json.dump(gemini_resp.json(), f, indent=2)
-        
-
         with open("test_response_genai_3.json", "r") as f:
             result = json.load(f)
-        
         '''
 
         # print('loaded')
@@ -309,12 +307,9 @@ def autocomplete_arch_names(q: str = Query(..., min_length=3)):
 
 @app.get("/get_arch_code")
 def get_arch_code(arch_name: str = Query(...)):
-    print('Entered')
-    print(arch_name)
     with PG_CONN.cursor() as cur:
         cur.execute("SELECT diagram_mermaid_code FROM diagrams WHERE diagram_name = %s ORDER BY UPDATED_AT DESC", (arch_name,))
         result = cur.fetchone()
-        print(result)
         if not result:
             return JSONResponse(status_code=404, content={"error": "No diagram found with this name"})
 
@@ -640,6 +635,10 @@ def parse_mermaid(mermaid_code):
                 src = edge_match.group(1).strip()
                 label = edge_match.group(2).strip()
                 tgt = edge_match.group(3).strip()
+
+                # If label is empty or only spaces, default to 'UNKNOWN'
+                if not label:
+                    label = "UNKNOWN"
 
                 edges.append({
                     "source": src,
