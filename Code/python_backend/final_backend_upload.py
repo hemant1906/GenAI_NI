@@ -381,7 +381,7 @@ def chat(query: str = Form(...), session_id: str = Form(...)):
 
         search_res = coll.query(
             query_texts=[query],
-            n_results=5,
+            n_results=25,
             include=["metadatas", "documents"]
         )
 

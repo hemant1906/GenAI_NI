@@ -10,13 +10,14 @@ app_collection = client.get_or_create_collection(name="architecture_applications
 
 def store_diagram_summary(diagram_id, diagram_name, summary, description, pros, cons):
     content = f"""Summary: {summary}
-Description: {description}
-Pros:
-{chr(10).join(pros)}
-
-Cons:
-{chr(10).join(cons)}
-"""
+    Diagram Name: {diagram_name}
+    Description: {description}
+    Pros:
+    {chr(10).join(pros)}
+    
+    Cons:
+    {chr(10).join(cons)}
+    """
 
     metadata = {
         "diagram_id": diagram_id,
@@ -34,6 +35,7 @@ def store_application(app_data):
     content = f"""Title: {app_data['title']}
 System Code: {app_data['system_code']}
 Group: {app_data['group']}
+Diagram Name: {app_data['diagram_name']}
 Relationships:
 {chr(10).join(app_data['relationships'])}"""
 
@@ -53,6 +55,7 @@ Relationships:
 
 def store_complexity_entry(diagram_id, diagram_name, component, complexity, reason):
     content = f"""Component: {component}
+Diagram Name: {diagram_name}
 Complexity: {complexity}
 Reason: {reason}
 """
