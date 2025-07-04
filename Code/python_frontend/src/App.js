@@ -4,6 +4,7 @@ import MermaidRenderer from "./MermaidRenderer";
 import ReactMarkdown from "react-markdown";
 import cytoscape from "cytoscape";
 import fcose from "cytoscape-fcose";
+import { HiArrowUpCircle, HiMiniStopCircle } from "react-icons/hi2";
 
 // import DiagramViewer from "./DiagramViewer";
 import "./App.css";
@@ -109,6 +110,11 @@ export default function App() {
     const [depth, setDepth] = useState(1);
     const [graphResults, setGraphResults] = useState([]);
     const cyGraphRef = useRef();
+
+  // Window title
+  useEffect(() => {
+        document.title = "ArchPilot";  // Set browser tab title
+    }, []);
 
    // Use effect for Graph of Conn explorer
   useEffect(() => {
@@ -384,10 +390,17 @@ export default function App() {
       setComplexityTable([]);
 
       const res= await axios.get("http://localhost:7000/get_arch_code", { params: { arch_name: archName }});
-      const { arch_name, mermaid_code } = res.data;
+      const { arch_name, mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons } = res.data;
       const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
       setArchName(arch_name);
       setMermaidCode(String(cleanCode));
+      setSummary(summary);
+      setDescription(description);
+      setNodes(nodes || []);
+      setEdges(edges || []);
+      setComplexityTable(complexity_table || []);
+      setPros(pros || []);
+      setCons(cons || []);
     } catch (err) {
       console.error("Architecture loading failed:", err);
       alert("Architecture loading failed. Check console.");
@@ -523,14 +536,14 @@ export default function App() {
 
   return (
         <div className="container">
-            <h2 className="app-title">Architecture Agent</h2>
+            <h2 className="app-title">ArchPilot</h2>
             <div className="tab-container">
                 {/* Tabs */}
                 <div className="tabs">
-                    <button className={`tab-button ${activeTab === "upload" ? "active" : ""}`} onClick={() => setActiveTab("upload")}>View or Upload Architecture</button>
-                    <button className={`tab-button ${activeTab === "explorer" ? "active" : ""}`} onClick={() => setActiveTab("explorer")}>App Connect Explorer</button>
-                    <button className={`tab-button ${activeTab === "chat" ? "active" : ""}`} onClick={() => setActiveTab("chat")}>Talk to Systems</button>
-                    <button className={`tab-button ${activeTab === "domain_view" ? "active" : ""}`} onClick={() => setActiveTab("domain_view")}>Domain and Capability View</button>
+                    <button className={`tab-button ${activeTab === "upload" ? "active" : ""}`} onClick={() => setActiveTab("upload")}>AaC Agent</button>
+                    <button className={`tab-button ${activeTab === "explorer" ? "active" : ""}`} onClick={() => setActiveTab("explorer")}>DepScan Agent</button>
+                    <button className={`tab-button ${activeTab === "chat" ? "active" : ""}`} onClick={() => setActiveTab("chat")}>ArchBOT</button>
+                    <button className={`tab-button ${activeTab === "domain_view" ? "active" : ""}`} onClick={() => setActiveTab("domain_view")}>Arch Insights</button>
                 </div>
             </div>
             <div className="tab-content">
@@ -538,7 +551,7 @@ export default function App() {
             {activeTab === "upload" && (
                 <div className="flex-layout">
                     <div className="left-panel">
-                        <h3>Upload Architecture</h3>
+                        <h3>Generate Architectural Insights</h3>
                         <input type="file" onChange={handleImageChange} /><br />
                         <input
                             type="text"
@@ -553,18 +566,18 @@ export default function App() {
                             onChange={(e) => setDiagramName(e.target.value)}
                         /><br />
                         <button className="primary-button" onClick={handleUpload} disabled={loading}>
-                            {loading ? "Uploading and Generating Insights..." : "Upload"}
+                            {loading ? "Importing..." : "Import"}
                         </button>
                         {/* Animation appears below button during loading */}
                             {loading && (
                                 <div className="upload-animation">
-                                    <div className="upload-step">📄 File ➔ 🤖 GenAI ➔ 🗄️ PGSQL ➔ 🌐 Neo4j ➔ 💾 Vector ➔ ✅ Output</div>
+                                    <div className="upload-step">⏳ Agent is building architecture knowledge base</div>
                                 </div>
                             )}
                         {/* View Architecture - sub item in upload tab*/}
                         <hr />
-                        <h3>View Architecture</h3>
-                            <label>Architecture Name</label>
+                        <h3>View Architectural Insights</h3>
+                            <label>Select architecture</label>
                             <div className="suggestion-wrapper">
                               <input type="text" className="input-box" value={archName} onChange={(e) => { setArchName(e.target.value); fetchArchSuggestions(e.target.value); }} placeholder="Enter Architecture Name" />
                               {archSuggestions.length > 0 && (
@@ -698,13 +711,13 @@ export default function App() {
                 </div>
             )}
 
-            {/* App Connect Explorer */}
+            {/* Dependency Explorer */}
             {activeTab === "explorer" && (
                 <div className="flex-layout">
                   <div className="left-panel">
-                    <h2>App Connect Explorer</h2>
+                    <h2>Dependency Explorer</h2>
                     <div className="suggestion-wrapper">
-                        <label>Enter App ID:</label>
+                        <label>Enter Application Id:</label>
                       <input type="text" className="input-box" value={appIdInput} onChange={(e) => { setAppIdInput(e.target.value); fetchAppSuggestions(e.target.value); }} placeholder="Start typing App ID" />
                       {appSuggestions.length > 0 && (
                           <ul className="suggestion-list">
@@ -758,10 +771,15 @@ export default function App() {
                     </div>
                     <div className="chat-input">
                         <textarea placeholder="Ask your question..." value={query} onChange={(e) => setQuery(e.target.value)} />
-                        <div className="send-container">
-                            <button className="chat-send-btn" onClick={handleChatSubmit} disabled={sending}>{sending ? "Agent working..." : "Chat with Agent"}</button>
-                            {sending && <span className="sending-icon">⏳</span>}
-                        </div>
+
+                            <button className="icon-only-btn" onClick={handleChatSubmit} disabled={sending}>
+                            {sending ? (
+                                <HiMiniStopCircle className="blinking-icon" size={40} />
+                            ) : (
+                                <HiArrowUpCircle size={40} />
+                            )}
+                            </button>
+
                     </div>
 
                     <div className="chat-latest">
@@ -850,7 +868,6 @@ export default function App() {
                             <th>From Application</th>
                             <th>To Application</th>
                             <th>Interface Type</th>
-                            <th>Protocol</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -859,7 +876,6 @@ export default function App() {
                               <td>{row.source_name ? `${row.from_node}: ${row.source_name}` : row.from_node}</td>
                               <td>{row.target_name ? `${row.to_node}: ${row.target_name}` : row.to_node}</td>
                               <td>{row.interface_type}</td>
-                              <td>{row.protocol}</td>
                             </tr>
                           ))}
                         </tbody>

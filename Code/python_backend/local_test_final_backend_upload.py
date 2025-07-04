@@ -306,6 +306,7 @@ def autocomplete_arch_names(q: str = Query(..., min_length=3)):
         PG_CONN.commit()
     return {"results": matches}
 
+# Updating for more content in view #
 @app.get("/get_arch_code")
 def get_arch_code(arch_name: str = Query(...)):
     print(arch_name)
@@ -316,10 +317,80 @@ def get_arch_code(arch_name: str = Query(...)):
         if not result:
             return JSONResponse(status_code=404, content={"error": "No diagram found with this name"})
 
+        # For Summary, Description, Pros, Cons
+        coll = client.get_collection(name='architecture_diagrams')
+        results = coll.get(
+            where={"diagram_name": arch_name},
+            include=["documents", "metadatas"]
+        )
+
+        for doc in results["documents"]:
+            if not isinstance(doc, str):
+                continue  # Skip if somehow not a string
+
+            # Robust, section-based extraction using non-greedy matching
+            pattern = re.compile(
+                r"Summary:\s*(.*?)Diagram Name:\s*(.*?)\s*Description:\s*(.*?)\s*Pros:\s*(.*?)\s*Cons:\s*(.*)",
+                re.DOTALL | re.IGNORECASE
+            )
+
+        match = pattern.search(doc)
+        if match:
+            summary = match.group(1).strip()
+            description = match.group(3).strip()
+            raw_pros = match.group(4).strip()
+            pros_list = re.findall(r'([A-Za-z\s]+?):\s*(.*?)(?=\n[A-Za-z\s]+?:|\Z)', raw_pros, re.DOTALL)
+            pros = [f"{title.strip()}: {desc.strip()}" for title, desc in pros_list]
+            raw_cons = match.group(5).strip()
+            cons_list = re.findall(r'([A-Za-z\s]+?):\s*(.*?)(?=\n[A-Za-z\s]+?:|\Z)', raw_cons, re.DOTALL)
+            cons = [f"{title.strip()}: {desc.strip()}" for title, desc in cons_list]
+
+        # For System Complexity Table
+        coll = client.get_collection(name='architecture_complexity')
+        results = coll.get(
+            where={"diagram_name": arch_name},
+            include=["documents", "metadatas"]
+        )
+
+        complexity_table = []
+        # Regex to extract component, complexity, reason
+
+        pattern = re.compile(
+            r"Component:\s*(.*?)\s*Diagram Name:\s*.*?Complexity:\s*(.*?)\s*Reason:\s*(.*)",
+            re.DOTALL | re.IGNORECASE
+        )
+
+        for doc in results["documents"]:
+            match = pattern.search(doc)
+            if match:
+                component = match.group(1).strip()
+                complexity = match.group(2).strip()
+                reason = match.group(3).strip()
+
+                complexity_table.append({
+                    "component": component,
+                    "complexity": complexity,
+                    "reason": reason
+                })
+
+        # For nodes and edges
+        nodes, edges = parse_mermaid(result[0])
+        print(nodes)
+        print('++++++++')
+        print(edges)
+
         return {
             "arch_name": arch_name,
-            "mermaid_code": result[0]
+            "mermaid_code": result[0],
+            "summary": summary,
+            "description": description,
+            "nodes": nodes,
+            "edges": edges,
+            "complexity_table": complexity_table,
+            "pros": pros,
+            "cons": cons
         }
+
 # --- Chat Section with simple RAM based chat history --- #
 
 def infer_collection(prompt: str) -> str:
@@ -443,9 +514,9 @@ def get_relationships_by_interface_type(asset_ids: List[str], interface_type: st
     query = """
     MATCH (a)-[r]->(b)
     WHERE a.id IN $ids AND r.interface_type = $interface_type
-    RETURN a.id AS from_node, a.name AS source_name, b.name AS target_name, b.id AS to_node, r.interface_type AS interface_type, r.protocol AS protocol
+    RETURN a.id AS from_node, a.name AS source_name, b.name AS target_name, b.id AS to_node, r.interface_type AS interface_type
     """
-    unique_edges: Set[Tuple[str, str, str, str, str, str]] = set()
+    unique_edges: Set[Tuple[str, str, str, str, str]] = set()
     with driver.session() as session:
         result = session.run(query, ids=asset_ids, interface_type=interface_type)
         for record in result:
@@ -454,8 +525,7 @@ def get_relationships_by_interface_type(asset_ids: List[str], interface_type: st
                 record["source_name"],
                 record["to_node"],
                 record["target_name"],
-                record["interface_type"],
-                record.get("protocol", "")
+                record["interface_type"]
             )
             if edge not in unique_edges:
                 unique_edges.add(edge)
@@ -465,10 +535,9 @@ def get_relationships_by_interface_type(asset_ids: List[str], interface_type: st
             "source_name": source_name,
             "to_node": to_node,
             "target_name": target_name,
-            "interface_type": itype,
-            "protocol": protocol
+            "interface_type": itype
         }
-        for (from_node, source_name, to_node, target_name, itype, protocol) in unique_edges
+        for (from_node, source_name, to_node, target_name, itype) in unique_edges
     ]
 
 # Domain partial search
