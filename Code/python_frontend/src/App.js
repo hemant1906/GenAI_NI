@@ -90,6 +90,8 @@ export default function App() {
     const [latestResponse, setLatestResponse] = useState("");
     const [showHistory, setShowHistory] = useState(false);
     const [sending, setSending] = useState(false);
+    // Detect Mermaid in latestResponse (for Chat)
+    const containsMermaid = latestResponse?.includes("graph TD") || latestResponse?.includes("graph LR");
 
     // Domain and Capability states
     const [domain, setDomain] = useState('');
@@ -766,12 +768,19 @@ export default function App() {
                         <h3>Latest Response:</h3>
                         {latestResponse && (
                                 <div className="chat-response">
-                                    <ReactMarkdown>
-                                        {latestResponse
-                                            .replace(/\|(\s*):---.*\|/g, match => `${match}\n`)
-                                            .replace(/\|\s*\|/g, "|\n|")
-                                        }
-                                    </ReactMarkdown>
+                                     {containsMermaid ? (
+                                        <>
+                                            <h4>Mermaid Diagram</h4>
+                                            <MermaidRenderer chart={latestResponse} />
+                                        </>
+                                    ) : (
+                                        <ReactMarkdown>
+                                            {latestResponse
+                                                .replace(/\|(\s*):---.*\|/g, match => `${match}\n`)
+                                                .replace(/\|\s*\|/g, "|\n|")
+                                            }
+                                        </ReactMarkdown>
+                                    )}
                                 </div>
                          )}
                     </div>
