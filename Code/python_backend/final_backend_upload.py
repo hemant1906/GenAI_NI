@@ -451,7 +451,7 @@ def chat(query: str = Form(...), session_id: str = Form(...)):
 
         search_res = coll.query(
             query_texts=[query],
-            n_results=25,
+            n_results=150,
             include=["metadatas", "documents"]
         )
 
@@ -475,6 +475,15 @@ You are an expert system assistant. Based on the following {collection.replace('
 
         response = model.generate_content(full_prompt)
         answer = response.text.strip() if hasattr(response, 'text') else "Error processing response."
+
+        # Clean answer if it starts and ends with triple backticks
+        if answer.startswith("```") and answer.endswith("```"):
+            # Remove the triple backticks
+            answer = answer.strip('`').strip()
+
+            # If it starts with 'mermaid', remove that too
+            if answer.lower().startswith('mermaid'):
+                answer = answer[len('mermaid'):].strip()
 
         # Update memory
         chat_memory[session_id] = context_text + f"\n\nQ: {query}\nA: {answer}"
