@@ -89,10 +89,15 @@ export default function App() {
     const [chatHistory, setChatHistory] = useState([]);
   //  const [chatResponse, setChatResponse] = useState("");  Replaced by latestResponse
     const [latestResponse, setLatestResponse] = useState("");
-    const [showHistory, setShowHistory] = useState(false);
     const [sending, setSending] = useState(false);
     // Detect Mermaid in latestResponse (for Chat)
-    const containsMermaid = latestResponse?.includes("graph TD") || latestResponse?.includes("graph LR");
+    const containsMermaid = latestResponse?.includes("graph TD") || latestResponse?.includes("graph LR") || latestResponse?.includes("graph BT") || latestResponse?.includes("graph RL");
+    // For auto scroll to end
+    const messagesEndRef = useRef(null);
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [chatHistory]);
+
 
     // Domain and Capability states
     const [domain, setDomain] = useState('');
@@ -450,7 +455,6 @@ export default function App() {
             .then(() => {
                 setChatHistory([]);
                 setLatestResponse("");
-                setShowHistory(false);
                 console.log("Session reset successful");
 
          // Generate new session
@@ -759,64 +763,57 @@ export default function App() {
             {/* Chat Tab */}
             {activeTab === "chat" && (
                 <div className="chat-section">
-                    <div style={{ display: "flex", alignItems: "center", marginTop: "10px" }}>
+                    {/* Header with Session ID */}
+                    <div className="chat-header">
                         <span className="session-id-label">Session ID: {sessionId}</span>
-                        <button
-                            className="reset-session-btn"
-                            title="Reset"
-                            onClick={handleResetSession}
-                        >
+                        <button className="reset-session-btn" title="Reset" onClick={handleResetSession}>
                             ⟳
                         </button>
                     </div>
-                    <div className="chat-input">
-                        <textarea placeholder="Ask your question..." value={query} onChange={(e) => setQuery(e.target.value)} />
 
-                            <button className="icon-only-btn" onClick={handleChatSubmit} disabled={sending}>
+                    {/* Chat messages list */}
+                    <div className="chat-messages-container">
+                        {chatHistory.map((chat, index) => (
+                            <React.Fragment key={index}>
+                                <div className="chat-message user-message">
+                                    <div className="message-content">{chat.question}</div>
+                                </div>
+                                <div className="chat-message system-message">
+                                    <div className="message-content">
+                                        {containsMermaid && index === chatHistory.length - 1 ? (
+                                            <>
+                                                <h4>Mermaid Diagram</h4>
+                                                <MermaidRenderer chart={chat.answer} />
+                                            </>
+                                        ) : (
+                                            <ReactMarkdown>
+                                                {chat.answer
+                                                    .replace(/\|(\s*):---.*\|/g, match => `${match}\n`)
+                                                    .replace(/\|\s*\|/g, "|\n|")
+                                                }
+                                            </ReactMarkdown>
+                                        )}
+                                    </div>
+                                </div>
+                            </React.Fragment>
+                        ))}
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Chat input fixed at bottom */}
+                    <div className="chat-input-container">
+                        <textarea
+                            placeholder="Ask your question..."
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
+                        <button className="icon-only-btn" onClick={handleChatSubmit} disabled={sending}>
                             {sending ? (
                                 <HiMiniStopCircle className="blinking-icon" size={40} />
                             ) : (
                                 <HiArrowUpCircle size={40} />
                             )}
-                            </button>
-
-                    </div>
-
-                    <div className="chat-latest">
-                        <h3>Latest Response:</h3>
-                        {latestResponse && (
-                                <div className="chat-response">
-                                     {containsMermaid ? (
-                                        <>
-                                            <h4>Mermaid Diagram</h4>
-                                            <MermaidRenderer chart={latestResponse} />
-                                        </>
-                                    ) : (
-                                        <ReactMarkdown>
-                                            {latestResponse
-                                                .replace(/\|(\s*):---.*\|/g, match => `${match}\n`)
-                                                .replace(/\|\s*\|/g, "|\n|")
-                                            }
-                                        </ReactMarkdown>
-                                    )}
-                                </div>
-                         )}
-                    </div>
-
-                    <div className="chat-history-collapsible">
-                        <button className="primary-button" onClick={() => setShowHistory(!showHistory)}>
-                            {showHistory ? "Hide History" : "Show History"}
                         </button>
-                        {showHistory && (
-                            <div className="chat-history">
-                                {chatHistory.map((chat, index) => (
-                                    <div key={index} className="chat-history-item">
-                                        <p><strong>You:</strong> {chat.question}</p>
-                                        <p><strong>System:</strong> {chat.answer}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 </div>
             )}
