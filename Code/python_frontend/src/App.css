@@ -737,3 +737,41 @@ label {
     overflow-wrap: break-word;
     word-break: break-word;
 }
+
+/* Subtabs styling */
+.subtabs {
+  display: flex;
+  border-bottom: 2px solid #ccc;
+  margin-bottom: 16px;
+}
+
+/* Each subtab */
+.subtab-button {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  color: #333;
+}
+
+.subtab-button:hover {
+  background-color: #f1f1f1;
+}
+
+.subtab-button.active {
+  border-color: var(--primary-red);
+  background-color: var(--primary-red);
+  color: white;
+  font-weight: 600;
+}
+
+.placeholder {
+  font-style: italic;
+  color: #888;
+  margin-top: 20px;
+}

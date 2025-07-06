@@ -295,14 +295,15 @@ The output must contain one clearly separated block per application, using the s
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-'''
+
 # --- Upload via Confluence URL --- #
 CONFLUENCE_API_TOKEN = os.getenv("CONFLUENCE_API_TOKEN")
 CONFLUENCE_EMAIL = os.getenv("CONFLUENCE_EMAIL")
 
-app.post("/process_confluence/")
-def process_confluence_page(diagram_name: str = Form(...), confluence_url: str = Form(...)):
+@app.post("/process_confluence/")
+def process_confluence_page(diagram_name: str = Form(...), asset_id: str = Form(...), confluence_url: str = Form(...)):
     try:
+
         # Extract page ID from URL
         if "/pages/" not in confluence_url:
             raise HTTPException(status_code=400, detail="Invalid Confluence URL format")
@@ -451,8 +452,13 @@ def process_confluence_page(diagram_name: str = Form(...), confluence_url: str =
         )
 
         result = gemini_resp.json()
+        
+        '''
 
-        # print('loaded')
+        with open("test_response_core_asset_APP001.json", "r") as f:
+            result = json.load(f)
+
+        '''
 
         if "candidates" not in result:
             raise HTTPException(status_code=500, detail=result)
@@ -596,7 +602,7 @@ def process_confluence_page(diagram_name: str = Form(...), confluence_url: str =
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-'''
+
 
 # --- View or Add architecture Section --- #
 

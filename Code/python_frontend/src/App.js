@@ -69,7 +69,9 @@ export default function App() {
   // Upload States
   const [image, setImage] = useState(null);
   const [assetId, setAssetId] = useState("");
+  const [assetIdConf, setAssetIdConf] = useState("");
   const [diagramName, setDiagramName] = useState("");
+  const [diagramNameConf, setDiagramNameConf] = useState("");
   const [loading, setLoading] = useState(false);
   const [mermaidCode, setMermaidCode] = useState("");
   const [summary, setSummary] = useState("");
@@ -79,6 +81,7 @@ export default function App() {
   const [cons, setCons] = useState([]);
   const [edges, setEdges] = useState([]);
   const [nodes, setNodes] = useState([]);
+  const [confluenceUrl, setConfluenceUrl] = useState("");
   /* View diagram const definitions*/
   const [archName, setArchName] = useState('');
   const [archSuggestions, setArchSuggestions] = useState([]);
@@ -88,10 +91,10 @@ export default function App() {
     const [query, setQuery] = useState("");
     const [chatHistory, setChatHistory] = useState([]);
   //  const [chatResponse, setChatResponse] = useState("");  Replaced by latestResponse
-    const [latestResponse, setLatestResponse] = useState("");
+  //  const [latestResponse, setLatestResponse] = useState("");
     const [sending, setSending] = useState(false);
     // Detect Mermaid in latestResponse (for Chat)
-    const containsMermaid = latestResponse?.includes("graph TD") || latestResponse?.includes("graph LR") || latestResponse?.includes("graph BT") || latestResponse?.includes("graph RL");
+  //  const containsMermaid = latestResponse?.includes("graph TD") || latestResponse?.includes("graph LR") || latestResponse?.includes("graph BT") || latestResponse?.includes("graph RL");
     // For auto scroll to end
     const messagesEndRef = useRef(null);
     useEffect(() => {
@@ -115,6 +118,8 @@ export default function App() {
     const [depth, setDepth] = useState(1);
     const [graphResults, setGraphResults] = useState([]);
     const cyGraphRef = useRef();
+
+    const [activeSubTab, setActiveSubTab] = useState("import");
 
   // Window title
   useEffect(() => {
@@ -367,11 +372,71 @@ export default function App() {
       setComplexityTable(complexity_table || []);
       setPros(pros || []);
       setCons(cons || []);
+      // Clear input fields after successful import
+        setImage(null);
+        setDiagramName('');
+        setAssetId('');
     } catch (err) {
       console.error("Upload failed:", err);
       alert("Upload failed. Check console.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle Confluence URL Import
+  const handleConfluenceImport = async (e) => {
+    e.preventDefault();
+
+    if (!confluenceUrl || !assetIdConf || !diagramNameConf) {
+        alert("Please fill all fields.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("confluence_url", confluenceUrl);
+    formData.append("diagram_name", diagramNameConf);
+    formData.append("asset_id", assetIdConf);
+
+    try {
+        setLoading(true);
+        // Clear existing outputs before new import
+        setMermaidCode('');
+        setSummary('');
+        setDescription('');
+        setPros([]);
+        setCons([]);
+        setEdges([]);
+        setNodes([]);
+        setComplexityTable([]);
+
+        const res = await axios.post("http://localhost:7000/process_confluence/", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        const { mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons } = res.data;
+
+        const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
+
+        setMermaidCode(String(cleanCode));
+        setSummary(summary);
+        setDescription(description);
+        setNodes(nodes || []);
+        setEdges(edges || []);
+        setComplexityTable(complexity_table || []);
+        setPros(pros || []);
+        setCons(cons || []);
+
+        // Clear input fields after successful import
+        setConfluenceUrl('');
+        setDiagramNameConf('');
+        setAssetIdConf('');
+
+    } catch (err) {
+        console.error("Confluence Import failed:", err);
+        alert("Import failed. Check console.");
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -424,8 +489,12 @@ export default function App() {
         try {
             const res = await axios.post("http://localhost:7000/chat/", formData);
             const data = res.data;
-            setLatestResponse(data.response || "");
-            setChatHistory([...chatHistory, { question: query, answer: data.response }]);
+            // setLatestResponse(data.response || "");
+            const isMermaid = query?.includes("mermaid diagram") && (data.response?.includes("graph TD") || data.response?.includes("graph LR") || data.response?.includes("graph BT") || data.response?.includes("graph RL"));
+                setChatHistory([
+                  ...chatHistory,
+                  { question: query, answer: data.response, isMermaid }
+                ]);
             setQuery("");
         } catch (err) {
             console.error(err);
@@ -454,7 +523,7 @@ export default function App() {
         axios.post("http://localhost:7000/reset_session/", formData)
             .then(() => {
                 setChatHistory([]);
-                setLatestResponse("");
+                // setLatestResponse("");
                 console.log("Session reset successful");
 
          // Generate new session
@@ -556,28 +625,82 @@ export default function App() {
                 <div className="flex-layout">
                     <div className="left-panel">
                         <h3>Generate Architectural Insights</h3>
-                        <input type="file" onChange={handleImageChange} /><br />
-                        <input
-                            type="text"
-                            placeholder="Core Asset ID"
-                            value={assetId}
-                            onChange={(e) => setAssetId(e.target.value)}
-                        /><br />
-                        <input
-                            type="text"
-                            placeholder="Diagram Name"
-                            value={diagramName}
-                            onChange={(e) => setDiagramName(e.target.value)}
-                        /><br />
-                        <button className="primary-button" onClick={handleUpload} disabled={loading}>
-                            {loading ? "Importing..." : "Import"}
-                        </button>
-                        {/* Animation appears below button during loading */}
-                            {loading && (
-                                <div className="upload-animation">
-                                    <div className="upload-step">⏳ Agent is building architecture knowledge base</div>
+                            <div className="subtabs">
+                                <button
+                                    className={`subtab-button ${activeSubTab === "confluence" ? "active" : ""}`}
+                                    onClick={() => setActiveSubTab("confluence")}
+                                >
+                                    Confluence
+                                </button>
+                                <button
+                                    className={`subtab-button ${activeSubTab === "import" ? "active" : ""}`}
+                                    onClick={() => setActiveSubTab("import")}
+                                >
+                                    Import Architecture
+                                </button>
+                            </div>
+
+                            {/* Subtab: Confluence */}
+                            {activeSubTab === "confluence" && (
+                                <div className="confluence-inputs">
+                                    <input
+                                        type="text"
+                                        placeholder="Confluence Page URL"
+                                        value={confluenceUrl}
+                                        onChange={(e) => setConfluenceUrl(e.target.value)}
+                                    /><br />
+                                    <input
+                                        type="text"
+                                        placeholder="Core Asset ID"
+                                        value={assetIdConf}
+                                        onChange={(e) => setAssetIdConf(e.target.value)}
+                                    /><br />
+                                    <input
+                                        type="text"
+                                        placeholder="Diagram Name"
+                                        value={diagramNameConf}
+                                        onChange={(e) => setDiagramNameConf(e.target.value)}
+                                    /><br />
+                                    <button className="primary-button" onClick={handleConfluenceImport} disabled={loading}>
+                                         {loading ? "Importing..." : "Import"}
+                                    </button>
+                                    {/* Animation appears below button during loading */}
+                                    {loading && (
+                                    <div className="upload-animation">
+                                        <div className="upload-step">⏳ Agent is building architecture knowledge base</div>
+                                    </div>
+                                    )}
                                 </div>
                             )}
+
+                            {/* Subtab: Import Architecture */}
+                            {activeSubTab === "import" && (
+                            <>
+                                <input type="file" onChange={handleImageChange} /><br />
+                                    <input
+                                    type="text"
+                                        placeholder="Core Asset ID"
+                                        value={assetId}
+                                    onChange={(e) => setAssetId(e.target.value)}
+                                    /><br />
+                                    <input
+                                    type="text"
+                                        placeholder="Diagram Name"
+                                        value={diagramName}
+                                    onChange={(e) => setDiagramName(e.target.value)}
+                                    /><br />
+                                    <button className="primary-button" onClick={handleUpload} disabled={loading}>
+                                        {loading ? "Importing..." : "Import"}
+                                    </button>
+                                    {/* Animation appears below button during loading */}
+                                    {loading && (
+                                    <div className="upload-animation">
+                                        <div className="upload-step">⏳ Agent is building architecture knowledge base</div>
+                                    </div>
+                                    )}
+                            </>
+                        )}
+
                         {/* View Architecture - sub item in upload tab*/}
                         <hr />
                         <h3>View Architectural Insights</h3>
@@ -780,7 +903,7 @@ export default function App() {
                                 </div>
                                 <div className="chat-message system-message">
                                     <div className="message-content">
-                                        {containsMermaid && index === chatHistory.length - 1 ? (
+                                        {chat.isMermaid ? (
                                             <>
                                                 <h4>Mermaid Diagram</h4>
                                                 <MermaidRenderer chart={chat.answer} />
