@@ -14,6 +14,7 @@ import json
 import chromadb
 import google.generativeai as genai
 from typing import List, Dict, Set, Tuple
+from bs4 import BeautifulSoup
 
 # Load API Key from .env
 load_dotenv()
@@ -293,6 +294,309 @@ The output must contain one clearly separated block per application, using the s
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+'''
+# --- Upload via Confluence URL --- #
+CONFLUENCE_API_TOKEN = os.getenv("CONFLUENCE_API_TOKEN")
+CONFLUENCE_EMAIL = os.getenv("CONFLUENCE_EMAIL")
+
+app.post("/process_confluence/")
+def process_confluence_page(diagram_name: str = Form(...), confluence_url: str = Form(...)):
+    try:
+        # Extract page ID from URL
+        if "/pages/" not in confluence_url:
+            raise HTTPException(status_code=400, detail="Invalid Confluence URL format")
+
+        page_id = confluence_url.split("/pages/")[1].split("/")[0]
+
+        # Step 1: Fetch Confluence Page Content
+        api_url = f"https://aicolumbus6.atlassian.net/wiki/rest/api/content/{page_id}?expand=body.storage"
+
+        response = requests.get(api_url, auth=(CONFLUENCE_EMAIL, CONFLUENCE_API_TOKEN),
+                                headers={"Accept": "application/json"})
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code,
+                                detail=f"Failed to fetch Confluence page: {response.text}")
+
+        page_data = response.json()
+        html_content = page_data.get("body", {}).get("storage", {}).get("value", "")
+
+        # Step 2: Extract PNG from <ac:image>
+        soup = BeautifulSoup(html_content, "html.parser")
+        image_tag = soup.find("ac:image")
+        attachment_tag = image_tag.find("ri:attachment") if image_tag else None
+
+        if not attachment_tag or not attachment_tag.get("ri:filename", "").lower().endswith(".png"):
+            raise HTTPException(status_code=404, detail="No PNG image attachment found on the Confluence page")
+
+        filename = attachment_tag["ri:filename"]
+
+        # Fetch Attachment Metadata
+        attachment_api_url = f"https://aicolumbus6.atlassian.net/wiki/rest/api/content/{page_id}/child/attachment?filename={filename}"
+        attach_resp = requests.get(attachment_api_url, auth=(CONFLUENCE_EMAIL, CONFLUENCE_API_TOKEN))
+
+        if attach_resp.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to fetch attachment metadata")
+
+        attachments = attach_resp.json().get("results", [])
+        if not attachments:
+            raise HTTPException(status_code=404, detail="Attachment not found in Confluence")
+
+        attachment_id = attachments[0]["id"]
+        download_api_url = f"https://aicolumbus6.atlassian.net/wiki/rest/api/content/{page_id}/child/attachment/{attachment_id}/download"
+
+        # Download Image with Redirect Handling
+        image_response = requests.get(
+            download_api_url,
+            auth=(CONFLUENCE_EMAIL, CONFLUENCE_API_TOKEN),
+            headers={"Accept": "*/*"},
+            allow_redirects=True
+        )
+
+        if image_response.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Failed to download image attachment: {image_response.text}")
+
+        content_type = image_response.headers.get("Content-Type", "")
+        if "image" not in content_type:
+            raise HTTPException(status_code=500, detail="Downloaded content is not an image")
+
+        img_b64 = base64.b64encode(image_response.content).decode()
+
+        # Step 5: Send to Gemini (Your Full Structured Prompt)
+        prompt = """
+        You are an expert Enterprise Architect. Analyze the provided system architecture diagram. From the diagram, extract the following:
+
+        1. **Mermaid** (The code must follow these specific formatting rules:
+        - DO NOT include word Mermaid or ```mermaid or other wrappers in the output. The code block should start with graph TD (instead of Mermaid title)
+        - Include a comment line with the group name before each subgraph, e.g., %% Digital Channels.
+        - The subgraph name itself must be in double quotes, e.g., subgraph "Digital Channels".
+        - Application node definitions must not have double quotes around the title, e.g., PBCP[Private Banking Client Portal].
+        - Include a %% Connections comment before listing the relationships.
+        - Relationships between systems must be represented in [Source System Code] -->|[Relationship Type]| [Target System Code] format. For example: APP001 -->|API| APP002.
+        - Remove any special characters like - or hyphen from the relationship type in [Source System Code] -->|[Relationship Type]| [Target System Code].
+        - Exclude <br> or </br> tags from the code.)
+        2. **Summary** (max 50 words)
+        3. **Description** (max 200 words)
+        4. **Applications List**, for each:
+           - Title
+           - Application node
+           - Application Group/Category
+           - Relationships with other components in natural language and should include source application node and target application node. 
+        
+        5. **System Complexity Table** showing:
+           - Component Name  
+           - Complexity Score (Low/Medium/High)  
+           - Reason for Complexity (e.g., Many integrations, legacy tech, critical path dependency)  
+        
+        6. **Pros** of this architecture considering scalability, maintainability, security, and integration complexity. Don't include **bold** markers in the result. Output should be like:
+        **Pros**
+        - Scalability: ...
+        - Maintainability: ...
+        7. **Cons** of this architecture considering scalability, maintainability, security, and integration complexity. Don't include **bold** markers in the result. Output should be like:
+        **Cons**
+        - Scalability: ...
+        - Integration Complexity: ...
+        
+        Format your response as:
+        
+        **Mermaid**  
+        (The Mermaid code block should start here, without a title)
+        ...  
+        
+        **Summary**  
+        ...  
+        
+        **Description**  
+        ...  
+        
+        **Applications**  
+        - Title: ...  
+        - System Code: ...  
+        - Group: ...  
+        - Relationships:  
+          - ...  
+        
+        **System Complexity Table**  
+        | Component      | Complexity | Reason                       |  
+        |----------------|------------|------------------------------|  
+        | API Gateway    | High       | Central integration point    |  
+        | Identity Mgmt  | Medium     | Moderate coupling            |  
+        
+        **Pros**  
+        - ...  
+        
+        **Cons**  
+        - ...  
+        
+        The output must contain one clearly separated block per application, using the structure shown. No additional commentary or formatting is needed beyond the required fields.
+        """
+
+        # Gemini API Call
+        gemini_resp = requests.post(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent",
+            headers={"Content-Type": "application/json"},
+            params={"key": GEMINI_API_KEY},
+            json={
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [
+                            {"text": prompt},
+                            {"inline_data": {"mime_type": "image/png", "data": img_b64}}
+                        ]
+                    }
+                ]
+            },
+        )
+
+        result = gemini_resp.json()
+
+        # print('loaded')
+
+        if "candidates" not in result:
+            raise HTTPException(status_code=500, detail=result)
+
+        output_text = result["candidates"][0]["content"]["parts"][0]["text"]
+
+        # Example response chunks
+        sections = re.split(r"\*\*(.*?)\*\*", output_text)
+
+        # Parse Response
+        mermaid = ""
+        summary = ""
+        description = ""
+        applications = []
+        complexity_table = []
+        pros = []
+        cons = []
+
+        for i, section in enumerate(sections):
+            if section.strip().lower() == "mermaid":
+                mermaid_code = sections[i + 1].strip()
+                mermaid = clean_mermaid_code(mermaid_code)
+                # print('mermaid done')
+            elif section.strip().lower() == "summary":
+                summary = sections[i + 1].strip()
+                # print('summary done')
+            elif section.strip().lower() == "description":
+                description = sections[i + 1].strip()
+                # print('description done')
+            elif section.strip().lower() == "applications":
+                apps_text = sections[i + 1].strip()
+                app_blocks = re.split(r"-\s*Title:", apps_text)
+
+                for block in app_blocks[1:]:
+                    lines = block.strip().split("\n")
+                    title = lines[0].strip()
+                    system_code = lines[1].replace("System Code:", "").strip()
+                    group = lines[2].replace("Group:", "").strip()
+                    relationships = [
+                        line.strip("- ").strip()
+                        for line in lines[4:]
+                        if line.strip().startswith("-")
+                    ]
+
+                    applications.append({
+                        "title": title,
+                        "system_code": system_code,
+                        "group": group,
+                        "relationships": relationships
+                    })
+                    # print('application done')
+            elif "System Complexity Table" in section:
+                table_text = sections[i + 1].strip()
+                rows = table_text.splitlines()[2:]  # Skip header lines
+
+                for row in rows:
+                    cols = [col.strip() for col in row.split("|") if col.strip()]
+                    if len(cols) == 3:
+                        complexity_table.append({
+                            "component": cols[0],
+                            "complexity": cols[1],
+                            "reason": cols[2]
+                        })
+                # print('complexity done')
+            elif section.strip().lower() == "pros":
+                raw_pros = sections[i + 1].strip()
+                pros = [
+                    line.lstrip("- ").strip()
+                    for line in raw_pros.splitlines()
+                    if line.strip().startswith("-")
+                ]
+                # print('pros done')
+            elif section.strip().lower() == "cons":
+                raw_cons = sections[i + 1].strip()
+                cons = [
+                    line.lstrip("- ").strip()
+                    for line in raw_cons.splitlines()
+                    if line.strip().startswith("-")
+                ]
+                # print('cons done')
+
+        # Store Mermaid to PostgreSQL
+        diagram_id = f"DIAGRAM_{str(uuid4())[:8]}"
+        with PG_CONN.cursor() as cur:
+            cur.execute(
+                "INSERT INTO DIAGRAMS (diagram_id, diagram_mermaid_code, diagram_name) VALUES (%s, %s, %s)",
+                (diagram_id, mermaid, diagram_name),
+            )
+            PG_CONN.commit()
+
+            cur.execute("SELECT * FROM ASSETS WHERE asset_id = %s", (asset_id,))
+            if cur.fetchone():
+                cur.execute("UPDATE ASSETS SET asset_diagram_id = %s WHERE asset_id = %s", (diagram_id, asset_id))
+            else:
+                cur.execute(
+                    "INSERT INTO ASSETS (asset_id, asset_diagram_id, asset_name, asset_description) VALUES (%s, %s, '', '')",
+                    (asset_id, diagram_id),
+                )
+            PG_CONN.commit()
+        # print('pgsql done')
+
+        # Store Mermaid to Neo4j
+        nodes, edges = parse_mermaid(mermaid)
+        # print('neo4j entered')
+        with driver.session() as session:
+            session.execute_write(store_graph, diagram_id, nodes, edges)
+        # print('neo4j done')
+
+        # Store diagram-level doc
+        store_diagram_summary(diagram_id, diagram_name, summary, description, pros, cons)
+        # print('vector db for diagram done')
+
+        # Store each application separately
+        for app in applications:
+            store_application({
+                "title": app["title"],
+                "system_code": app["system_code"],
+                "group": app["group"],
+                "relationships": app["relationships"],
+                "diagram_id": diagram_id,
+                "diagram_name": diagram_name
+            })
+        # print('vector db for applications done')
+
+        # Store complexity data
+        for entry in complexity_table:
+            store_complexity_entry(diagram_id, diagram_name, entry['component'], entry['complexity'], entry['reason'])
+        # print('vector db for complexity done')
+
+        return {
+            "diagram_id": diagram_id,
+            "mermaid_code": mermaid,
+            "summary": summary,
+            "description": description,
+            "nodes": nodes,
+            "edges": edges,
+            "complexity_table": complexity_table,
+            "pros": pros,
+            "cons": cons
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+'''
 
 # --- View or Add architecture Section --- #
 
