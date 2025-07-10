@@ -295,6 +295,156 @@ The output must contain one clearly separated block per application, using the s
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- Bulk Upload --- #
+
+@app.post("/bulk_upload/")
+def bulk_upload_image():
+    try:
+        for i in range(3, 10):  # 3 to 9 inclusive
+            index = f"{i:03d}"  # formats 1 as '001', 2 as '002', ..., 9 as '009'
+            asset_id = f"APP{index}"
+            diagram_name = f"ARCH-{index}"
+            filename = f"test_response_core_asset_{asset_id}.json"
+
+            with open(filename, "r") as f:
+                result = json.load(f)
+
+            print('loaded: ', filename, diagram_name)
+
+            if "candidates" not in result:
+                raise HTTPException(status_code=500, detail=result)
+
+            output_text = result["candidates"][0]["content"]["parts"][0]["text"]
+
+            # Example response chunks
+            sections = re.split(r"\*\*(.*?)\*\*", output_text)
+
+            # Parse Response
+            mermaid = ""
+            summary = ""
+            description = ""
+            applications = []
+            complexity_table = []
+            pros = []
+            cons = []
+
+            for i, section in enumerate(sections):
+                if section.strip().lower() == "mermaid":
+                    mermaid_code = sections[i + 1].strip()
+                    mermaid = clean_mermaid_code(mermaid_code)
+                    print('mermaid done')
+                elif section.strip().lower() == "summary":
+                    summary = sections[i + 1].strip()
+                    print('summary done')
+                elif section.strip().lower() == "description":
+                    description = sections[i + 1].strip()
+                    print('description done')
+                elif section.strip().lower() == "applications":
+                    apps_text = sections[i + 1].strip()
+                    app_blocks = re.split(r"-\s*Title:", apps_text)
+
+                    for block in app_blocks[1:]:
+                        lines = block.strip().split("\n")
+                        title = lines[0].strip()
+                        system_code = lines[1].replace("System Code:", "").strip()
+                        group = lines[2].replace("Group:", "").strip()
+                        relationships = [
+                            line.strip("- ").strip()
+                            for line in lines[4:]
+                            if line.strip().startswith("-")
+                        ]
+
+                        applications.append({
+                            "title": title,
+                            "system_code": system_code,
+                            "group": group,
+                            "relationships": relationships
+                        })
+                        print('application done')
+                elif "System Complexity Table" in section:
+                    table_text = sections[i + 1].strip()
+                    rows = table_text.splitlines()[2:]  # Skip header lines
+
+                    for row in rows:
+                        cols = [col.strip() for col in row.split("|") if col.strip()]
+                        if len(cols) == 3:
+                            complexity_table.append({
+                                "component": cols[0],
+                                "complexity": cols[1],
+                                "reason": cols[2]
+                            })
+                    print('complexity done')
+                elif section.strip().lower() == "pros":
+                    raw_pros = sections[i + 1].strip()
+                    pros = [
+                        line.lstrip("- ").strip()
+                        for line in raw_pros.splitlines()
+                        if line.strip().startswith("-")
+                    ]
+                    print('pros done')
+                elif section.strip().lower() == "cons":
+                    raw_cons = sections[i + 1].strip()
+                    cons = [
+                        line.lstrip("- ").strip()
+                        for line in raw_cons.splitlines()
+                        if line.strip().startswith("-")
+                    ]
+                    print('cons done')
+
+            # Store Mermaid to PostgreSQL
+            diagram_id = f"DIAGRAM_{str(uuid4())[:8]}"
+            with PG_CONN.cursor() as cur:
+                cur.execute(
+                    "INSERT INTO DIAGRAMS (diagram_id, diagram_mermaid_code, diagram_name) VALUES (%s, %s, %s)",
+                    (diagram_id, mermaid, diagram_name),
+                )
+                PG_CONN.commit()
+
+                cur.execute("SELECT * FROM ASSETS WHERE asset_id = %s", (asset_id,))
+                if cur.fetchone():
+                    cur.execute("UPDATE ASSETS SET asset_diagram_id = %s WHERE asset_id = %s", (diagram_id, asset_id))
+                else:
+                    cur.execute(
+                        "INSERT INTO ASSETS (asset_id, asset_diagram_id, asset_name, asset_description) VALUES (%s, %s, '', '')",
+                        (asset_id, diagram_id),
+                    )
+                PG_CONN.commit()
+            print('pgsql done')
+
+            # Store Mermaid to Neo4j
+            nodes, edges = parse_mermaid(mermaid)
+            print('neo4j entered')
+            with driver.session() as session:
+                session.execute_write(store_graph, diagram_id, nodes, edges)
+            print('neo4j done')
+
+            # Store diagram-level doc
+            store_diagram_summary(diagram_id, diagram_name, summary, description, pros, cons)
+            print('vector db for diagram done')
+
+            # Store each application separately
+            for app in applications:
+                store_application({
+                    "title": app["title"],
+                    "system_code": app["system_code"],
+                    "group": app["group"],
+                    "relationships": app["relationships"],
+                    "diagram_id": diagram_id,
+                    "diagram_name": diagram_name
+                })
+            print('vector db for applications done')
+
+            # Store complexity data
+            for entry in complexity_table:
+                store_complexity_entry(diagram_id, diagram_name, entry['component'], entry['complexity'], entry['reason'])
+            print('vector db for complexity done')
+
+        return {
+            "Status": "Done"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- Upload via Confluence URL --- #
 CONFLUENCE_API_TOKEN = os.getenv("CONFLUENCE_API_TOKEN")
