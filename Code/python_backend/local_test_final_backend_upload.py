@@ -1150,7 +1150,14 @@ def run_target_planner_stream(arch_name: str = Form(...)):
                 "mermaid_code": mermaid_code,
                 "target_goals": target_goals
             }):
-                yield f"data: {json.dumps(event)}\n\n"  # SSE format
+                thoughts = event.get("thoughts", {})
+                for step, reasoning in thoughts.items():
+                    yield f"data: {json.dumps({'thinking': {'step': step, 'reasoning': reasoning}})}\n\n"
+
+                # Then stream actual results (excluding 'thoughts')
+                for k, v in event.items():
+                    if k != "thoughts":
+                        yield f"data: {json.dumps({k: v})}\n\n"
 
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 
@@ -1168,10 +1175,16 @@ def run_pattern_selector(arch_name: str = Form(...)):
         mermaid_code = result[0]
 
         def event_stream():
-            for event in pattern_graph.stream({
-                "mermaid_code": mermaid_code
-            }):
-                yield f"data: {json.dumps(event)}\n\n"  # SSE format
+            for event in pattern_graph.stream({"mermaid_code": mermaid_code}):
+                # First stream reasoning (if present)
+                thoughts = event.get("thoughts", {})
+                for step, reasoning in thoughts.items():
+                    yield f"data: {json.dumps({'thinking': {'step': step, 'reasoning': reasoning}})}\n\n"
+
+                # Then stream actual results (excluding 'thoughts')
+                for k, v in event.items():
+                    if k != "thoughts":
+                        yield f"data: {json.dumps({k: v})}\n\n"
 
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 

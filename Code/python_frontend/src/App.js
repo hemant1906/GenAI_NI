@@ -127,6 +127,7 @@ export default function App() {
     const agenticStreamEndRef = useRef(null);
     const [targetStreamResponses, setTargetStreamResponses] = useState([]);
     const [isTargetStreaming, setIsTargetStreaming] = useState(false);
+    const [debugMode, setDebugMode] = useState(false);
 
     useEffect(() => {
       agenticStreamEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -517,132 +518,176 @@ export default function App() {
     /* Handle for Target Planner and Pattern Selector */
 
     const handleTargetPlanner = async () => {
-      if (!archName) return alert("Select architecture name first.");
+          if (!archName) return;
 
-      const url = 'http://localhost:7001/agent/target-planner/stream';
-      const formData = new FormData();
-      formData.append("arch_name", archName);
+          setTargetStreamResponses([]);
+          setIsTargetStreaming(true);
 
-      setIsTargetStreaming(true);
-      setTargetStreamResponses([]);  // Clear previous
+          try {
+            const formData = new FormData();
+            formData.append("arch_name", archName);
 
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          body: formData,
-        });
+            const response = await fetch("http://localhost:7001/agent/target-planner/stream", {
+              method: "POST",
+              body: formData,
+            });
 
-        if (!response.ok || !response.body) {
-          alert("Failed to start Target Planner stream");
-          setIsTargetStreaming(false);
-          return;
-        }
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let buffer = "";
+            let buffer = "";
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
 
-          buffer += decoder.decode(value, { stream: true });
-          const parts = buffer.split("\n\n");
+              buffer += decoder.decode(value, { stream: true });
 
-          for (let i = 0; i < parts.length - 1; i++) {
-            const line = parts[i].trim();
-            if (line.startsWith("data: ")) {
-              const jsonStr = line.replace("data: ", "");
-              try {
-                const parsed = JSON.parse(jsonStr);
-                const [key, value] = Object.entries(parsed)[0];
-                let content = "";
-                if (typeof value === "string") {
-                  content = value;
-                } else if (typeof value === "object") {
-                  content = value.extracted || value.assessment || Object.values(value).join("\n") || JSON.stringify(value, null, 2);
-                } else {
-                  content = String(value);
+              const events = buffer.split("\n\n");
+              buffer = events.pop(); // hold incomplete part
+
+              for (const event of events) {
+                if (event.startsWith("data: ")) {
+                  const jsonStr = event.replace("data: ", "").trim();
+
+                  try {
+                    const parsed = JSON.parse(jsonStr);
+
+                    for (const stepKey in parsed) {
+                      const stepData = parsed[stepKey];
+
+                      // Handle thoughts (reasoning)
+                      if (stepData.thoughts && debugMode) {
+                        const thoughts = stepData.thoughts;
+                        for (const thoughtKey in thoughts) {
+                          const reasoning = thoughts[thoughtKey];
+                          if (reasoning?.trim()) {
+                            setTargetStreamResponses(prev => [
+                              ...prev,
+                              {
+                                key: `Thinking: ${thoughtKey}`,
+                                content: reasoning,
+                                isThought: true,
+                              },
+                            ]);
+                          }
+                        }
+                      }
+
+                      // Handle main output
+                      Object.entries(stepData).forEach(([key, value]) => {
+                        if (key !== "thoughts") {
+                          const content = typeof value === "object"
+                            ? JSON.stringify(value, null, 2)
+                            : value;
+
+                          setTargetStreamResponses(prev => [
+                            ...prev,
+                            {
+                              key,
+                              content,
+                              isThought: false,
+                            },
+                          ]);
+                        }
+                      });
+                    }
+                  } catch (err) {
+                    console.error("Error parsing SSE:", err);
+                  }
                 }
-                setTargetStreamResponses(prev => [...prev, { key, content }]);
-              } catch (err) {
-                console.error("Failed to parse SSE JSON:", err);
               }
             }
+          } catch (error) {
+            console.error("Target Planner Error:", error);
+          } finally {
+            setIsTargetStreaming(false);
           }
-
-          buffer = parts[parts.length - 1];
-        }
-      } catch (err) {
-        console.error("Target Planner streaming failed:", err);
-        alert("Error running Target Planner");
-      } finally {
-        setIsTargetStreaming(false);
-      }
-    };
+        };
 
     const handlePatternSelector = async () => {
-      if (!archName) return alert("Select architecture name first.");
+          if (!archName) return;
 
-      setIsPatternStreaming(true);
-      setPatternStreamResponses([]);
+          setPatternStreamResponses([]);
+          setIsPatternStreaming(true);
 
-      const url = 'http://localhost:7001/agent/pattern-selector/stream';
-      const formData = new FormData();
-      formData.append("arch_name", archName);
-      try {
-          const response = await fetch(url, {
-            method: "POST",
-            body: formData,
-          });
+          try {
+            const formData = new FormData();
+            formData.append("arch_name", archName);
 
-          if (!response.ok || !response.body) {
-            alert("Failed to start streaming");
-            setIsPatternStreaming(false);
-            return;
-          }
+            const response = await fetch("http://localhost:7001/agent/pattern-selector/stream", {
+              method: "POST",
+              body: formData,
+            });
 
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder("utf-8");
-          let buffer = "";
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+            let buffer = "";
 
-            buffer += decoder.decode(value, { stream: true });
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
 
-            const parts = buffer.split("\n\n"); // Each SSE event ends with double newline
+              buffer += decoder.decode(value, { stream: true });
+              const events = buffer.split("\n\n");
+              buffer = events.pop(); // Hold onto incomplete chunk
 
-            for (let i = 0; i < parts.length - 1; i++) {
-              const line = parts[i].trim();
-              if (line.startsWith("data: ")) {
-                const jsonStr = line.replace("data: ", "");
+              for (const event of events) {
+                if (!event.startsWith("data: ")) continue;
+
+                const jsonStr = event.replace("data: ", "").trim();
+
                 try {
                   const parsed = JSON.parse(jsonStr);
-                  const [key, value] = Object.entries(parsed)[0];
-                  let content = "";
-                  if (typeof value === "object") {
-                    content = value.info || value.summary || JSON.stringify(value, null, 2);
-                  } else {
-                    content = String(value);
+
+                  // Always take first key — supports extract, microservices, etc.
+                  const [stepKey, stepValue] = Object.entries(parsed)[0];
+
+                  if (stepValue && typeof stepValue === "object") {
+                    const { info, summary, thoughts } = stepValue;
+
+                    // Show thoughts (if debugMode is on)
+                    if (debugMode && thoughts) {
+                      for (const [thoughtKey, reasoning] of Object.entries(thoughts)) {
+                        if (reasoning?.trim()) {
+                          setPatternStreamResponses(prev => [
+                            ...prev,
+                            {
+                              key: `Thinking: ${thoughtKey}`,
+                              content: reasoning,
+                              isThought: true,
+                            },
+                          ]);
+                        }
+                      }
+                    }
+
+                    // Show response (info or summary)
+                    const content = info || summary || Object.values(stepValue).join("\n");
+                    if (content?.trim()) {
+                      setPatternStreamResponses(prev => [
+                        ...prev,
+                        {
+                          key: stepKey,
+                          content,
+                        },
+                      ]);
+                    }
                   }
 
-                  setPatternStreamResponses(prev => [...prev, { key, content }]);
                 } catch (err) {
-                  console.error("Failed to parse SSE JSON:", err);
+                  console.error("Error parsing SSE event:", err, jsonStr);
                 }
               }
             }
-            buffer = parts[parts.length - 1]; // keep partial chunk
-          }
-        } catch (err) {
-            console.error("Streaming error:", err);
-            alert("Pattern Selector stream failed.");
+
+          } catch (error) {
+            console.error("Pattern Selector Error:", error);
           } finally {
-            setIsPatternStreaming(false);       // hide spinner when done
+            setIsPatternStreaming(false);
           }
-    };
+        };
 
     /* Handle Download AaC */
     const downloadMermaid = () => {
@@ -1180,22 +1225,38 @@ export default function App() {
                         </ul>
                       )}
                     </div>
+                    <div style={{ marginBottom: "15px" }}>
+                      <label className="debug-toggle">
+                          <input
+                            type="checkbox"
+                            checked={debugMode}
+                            onChange={(e) => setDebugMode(e.target.checked)}
+                          />
+                          <span className="slider"></span>
+                          <span className="label-text">Show Reasoning</span>
+                        </label>
+                    </div>
 
                     <button className="primary-button" onClick={handleTargetPlanner} style={{ marginRight: '20px' }}>Target Planner</button>
                     <button className="primary-button" onClick={handlePatternSelector}>Pattern Selector</button>
                   </div>
 
                   <div className="right-panel">
-
                         <div className="chat-messages-container">
                           {[...targetStreamResponses, ...patternStreamResponses].map((msg, idx) => (
-                            <div key={idx} className="chat-message system-message">
-                              <div className="message-content">
-                                <h4 style={{ marginBottom: "6px", color: "#d9534f" }}>{msg.key.replace(/_/g, ' ').toUpperCase()}</h4>
-                                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                              <div
+                                key={idx}
+                                className={`chat-message ${msg.isThought ? "user-message" : "system-message"}`}
+                                style={{ alignSelf: msg.isThought ? "flex-end" : "flex-start" }}
+                              >
+                                <div className="message-content">
+                                  <h4 style={{ marginBottom: "6px", color: msg.isThought ? "#555" : "#d9534f" }}>
+                                    {msg.key.replace(/_/g, ' ').toUpperCase()}
+                                  </h4>
+                                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
 
                           {(isTargetStreaming || isPatternStreaming) && (
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>

@@ -14,6 +14,7 @@ class TargetPlannerState(BaseModel):
     gaps: Optional[str] = None
     roadmap: Optional[str] = None
     summary: Optional[str] = None
+    thoughts: Optional[Dict[str, str]] = {}
 
 # Step 1: Extract Capabilities and Components
 def extract_components(state):
@@ -24,25 +25,58 @@ def extract_components(state):
 
     Mermaid Code:
     {state.mermaid_code}
+
+    First, explain your reasoning and assumptions.
+    Then list the components. Use markdown headers:
+    ### Reasoning
+    ### Extracted
     
-    Only list the components with brief one liner description for each. Overall it should not exceed 250 words.
+    Limit total response to 300 words.
     """
-    response=llm(prompt)
-    return {"extracted": response}
+    full_response = llm(prompt)
+
+    reasoning, extracted = full_response, full_response
+    if "### Extracted" in full_response:
+        parts = full_response.split("### Extracted", 1)
+        reasoning = parts[0].strip()
+        extracted = "### Extracted\n" + parts[1].strip()
+
+    return {
+        "extracted": extracted,
+        "thoughts": {
+            "extract": reasoning
+        }
+    }
 
 # Step 2: Check if architecture meets industry goals
 def assess_alignment(state):
     prompt = f"""
-    Analyze the extracted components:
+    Evaluate the extracted components:
     {state.extracted}
 
-    Against target architecture goals:
+    Against target goals:
     {state.target_goals}
 
-    Score how well it meets these goals (0-100) and briefly explain only in one line for each scoring.
+    First reason your assessment, then score how well it meets these goals (0-100) and briefly explain only in one line for each scoring and return:
+    ### Reasoning
+    ### Assessment (Score and Brief explanation)
+    
+    Limit total response to 300 words.
     """
-    response = llm(prompt)
-    return {"assessment": response}
+    full_response = llm(prompt)
+
+    reasoning, assessment = full_response, full_response
+    if "### Assessment" in full_response:
+        parts = full_response.split("### Assessment", 1)
+        reasoning = parts[0].strip()
+        assessment = "### Assessment\n" + parts[1].strip()
+
+    return {
+        "assessment": assessment,
+        "thoughts": {
+            "assess": reasoning
+        }
+    }
 
 # Step 2.5: Decide path based on assessment
 
@@ -54,57 +88,126 @@ def route_based_on_alignment(state):
     """
     score_text = llm(score_prompt)
     score = int(''.join(filter(str.isdigit, score_text)))
-    return "enhancement" if score > 75 else "full_planning"
+    return "enhancement" if score > 70 else "full_planning"
 
 # Step 3a: Minor enhancement path
 def suggest_enhancements(state):
     prompt = f"""
-    Based on current state:
+    Based on current capabilities:
     {state.extracted}
 
-    Suggest 2-3 enhancements to better meet target goals:
+    Suggest 2–3 enhancements to better meet goals:
     {state.target_goals}
+
+    First explain your thought process.
+
+    Then return:
+    ### Reasoning
+    ### Recommendations
     
     Only include WHY. Do not include HOW TO IMPLEMENT. Overall this must not exceed 300 words. 
     """
-    response = llm(prompt)
-    return {"summary": response}
+    full_response = llm(prompt)
+
+    reasoning, summary = full_response, full_response
+    if "### Recommendations" in full_response:
+        parts = full_response.split("### Recommendations", 1)
+        reasoning = parts[0].strip()
+        summary = "### Recommendations\n" + parts[1].strip()
+
+    return {
+        "summary": summary,
+        "thoughts": {
+            "enhance": reasoning
+        }
+    }
 
 # Step 3b: Full roadmap generation path
 def identify_gaps(state):
     prompt = f"""
-    Identify architecture gaps from this:
+    Identify architecture gaps in:
     {state.extracted}
 
-    Compared to target goals:
+    Compared to:
     {state.target_goals}
-    
-    Only list the gaps and recommendation with maximum 1-2 lines of description.
+
+    Return top 3 gaps with 1–2 line suggestions.
+
+    Use markdown:
+    ### Reasoning
+    ### Gaps (Top 3)
     """
-    response = llm(prompt)
-    return {"gaps": response}
+    full_response = llm(prompt)
+
+    reasoning, gaps = full_response, full_response
+    if "### Gaps" in full_response:
+        parts = full_response.split("### Gaps", 1)
+        reasoning = parts[0].strip()
+        gaps = "### Gaps\n" + parts[1].strip()
+
+    return {
+        "gaps": gaps,
+        "thoughts": {
+            "identify_gaps": reasoning
+        }
+    }
+
 
 def roadmap_planning(state):
     prompt = f"""
-    Use these gaps:
+    Create a 3-phase roadmap to address these gaps:
     {state.gaps}
 
-    Create a brief 3-phase roadmap to move toward target goals. Do not exceed 250 words.
+    Explain your thinking first.
+
+    Then return:
+    ### Reasoning
+    ### Roadmap
+    
+    Limit the overall response within 250 words.
     """
-    response = llm(prompt)
-    return {"roadmap": response}
+    full_response = llm(prompt)
+
+    reasoning, roadmap = full_response, full_response
+    if "### Roadmap" in full_response:
+        parts = full_response.split("### Roadmap", 1)
+        reasoning = parts[0].strip()
+        roadmap = "### Roadmap\n" + parts[1].strip()
+
+    return {
+        "roadmap": roadmap,
+        "thoughts": {
+            "plan_roadmap": reasoning
+        }
+    }
 
 def summarize_roadmap(state):
     prompt = f"""
-    Summarize transition plan:
+    Summarize this architecture transition plan:
     Extracted: {state.extracted}
     Gaps: {state.gaps}
     Roadmap: {state.roadmap}
+
+    First explain reasoning, then return:
+    ### Reasoning
+    ### Summary
     
-    Summary should not exceed 300 words.
+    Limit the overall response to 300 words.
     """
-    response = llm(prompt)
-    return {"summary": response}
+    full_response = llm(prompt)
+
+    reasoning, summary = full_response, full_response
+    if "### Summary" in full_response:
+        parts = full_response.split("### Summary", 1)
+        reasoning = parts[0].strip()
+        summary = "### Summary\n" + parts[1].strip()
+
+    return {
+        "summary": summary,
+        "thoughts": {
+            "summarize_roadmap": reasoning
+        }
+    }
 
 # Build graph
 def get_target_planner_graph():
