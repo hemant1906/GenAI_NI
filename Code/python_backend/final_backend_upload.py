@@ -15,6 +15,10 @@ import chromadb
 import google.generativeai as genai
 from typing import List, Dict, Set, Tuple
 from bs4 import BeautifulSoup
+from fastapi.responses import StreamingResponse
+from agents.tp_with_decision import get_target_planner_graph
+from agents.ps_with_decision import get_pattern_selector_graph
+import json
 
 # Load API Key from .env
 load_dotenv()
@@ -967,6 +971,55 @@ def get_diagram_info(node_id: str = Query(...)):
             "diagram_name": result[0],
             "mermaid_code": result[1]
         }
+
+# --- Agentic AI capabilities section --- #
+
+target_graph = get_target_planner_graph()
+pattern_graph = get_pattern_selector_graph()
+
+# Target Planner Stream #
+@app.post("/agent/target-planner/stream")
+def run_target_planner_stream(arch_name: str = Form(...)):
+    with PG_CONN.cursor() as cur:
+        cur.execute("SELECT diagram_mermaid_code FROM diagrams WHERE diagram_name = %s ORDER BY UPDATED_AT DESC",
+                    (arch_name,))
+        result = cur.fetchone()
+
+        if not result:
+            return JSONResponse(status_code=404, content={"error": "No diagram found with this name"})
+
+        mermaid_code = result[0]
+        target_goals = "Improve Modularity, Adopt Microservices, Enable CI/CD, Add Observability, Improve Security, Improve System Resilience"
+
+        def event_stream():
+            for event in target_graph.stream({
+                "mermaid_code": mermaid_code,
+                "target_goals": target_goals
+            }):
+                yield f"data: {json.dumps(event)}\n\n"  # SSE format
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+# Pattern Selector Stream #
+@app.post("/agent/pattern-selector/stream")
+def run_pattern_selector(arch_name: str = Form(...)):
+    with PG_CONN.cursor() as cur:
+        cur.execute("SELECT diagram_mermaid_code FROM diagrams WHERE diagram_name = %s ORDER BY UPDATED_AT DESC",
+                    (arch_name,))
+        result = cur.fetchone()
+
+        if not result:
+            return JSONResponse(status_code=404, content={"error": "No diagram found with this name"})
+
+        mermaid_code = result[0]
+
+        def event_stream():
+            for event in pattern_graph.stream({
+                "mermaid_code": mermaid_code
+            }):
+                yield f"data: {json.dumps(event)}\n\n"  # SSE format
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 # --- Utilities --- #
 

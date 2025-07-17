@@ -121,17 +121,6 @@ export default function App() {
 
     const [activeSubTab, setActiveSubTab] = useState("import");
 
-    // Streamed output for Agentic AI
-    const [patternStreamResponses, setPatternStreamResponses] = useState([]);
-    const [isPatternStreaming, setIsPatternStreaming] = useState(false);
-    const agenticStreamEndRef = useRef(null);
-    const [targetStreamResponses, setTargetStreamResponses] = useState([]);
-    const [isTargetStreaming, setIsTargetStreaming] = useState(false);
-
-    useEffect(() => {
-      agenticStreamEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [patternStreamResponses, targetStreamResponses]);
-
   // Window title
   useEffect(() => {
         document.title = "ArchPilot";  // Set browser tab title
@@ -212,7 +201,7 @@ export default function App() {
                 if (!trueNodeId) return;
 
                 try {
-                    const res = await axios.get("http://localhost:7001/diagram_info", {
+                    const res = await axios.get("http://localhost:7000/diagram_info", {
                         params: { node_id: trueNodeId }
                     });
                     if (res.data && res.data.mermaid_code && res.data.diagram_name) {
@@ -230,7 +219,7 @@ export default function App() {
   const fetchAppSuggestions = async (val) => {
     if (val.length >= 3) {
       try {
-        const res = await axios.get("http://localhost:7001/search_assets", { params: { q: val } });
+        const res = await axios.get("http://localhost:7000/search_assets", { params: { q: val } });
         setAppSuggestions(res.data.results || []);
       } catch (err) {
         console.error("Error fetching suggestions:", err);
@@ -243,7 +232,7 @@ export default function App() {
   const exploreConnections = async () => {
     if (!appIdInput) return alert("Please enter an App ID");
     try {
-      const res = await axios.get("http://localhost:7001/query", {
+      const res = await axios.get("http://localhost:7000/query", {
         params: { node_id: appIdInput.trim(), type: direction, depth },
       });
       setGraphResults(res.data.results || []);
@@ -256,7 +245,7 @@ export default function App() {
    // Session ID global logic
    useEffect(() => {
         if (!sessionId) {
-            axios.post("http://localhost:7001/generate_session/")
+            axios.post("http://localhost:7000/generate_session/")
                 .then(res => {
                     setSessionId(res.data.session_id);
                     console.log("Session initialized:", res.data.session_id);
@@ -269,7 +258,7 @@ export default function App() {
     const fetchDomainSuggestions = async (val) => {
         if (val.length >= 3) {
             try {
-                const res = await axios.get('http://localhost:7001/get_domains', { params: { q: val } });
+                const res = await axios.get('http://localhost:7000/get_domains', { params: { q: val } });
                 setDomainSuggestions(res.data.results || []);
             } catch (err) {
                 console.error('Error fetching domain suggestions:', err);
@@ -283,7 +272,7 @@ export default function App() {
     const fetchCapabilitySuggestions = async (val) => {
         if (val.length >= 3) {
             try {
-                const res = await axios.get('http://localhost:7001/get_capabilities', { params: { q: val } });
+                const res = await axios.get('http://localhost:7000/get_capabilities', { params: { q: val } });
                 setCapabilitySuggestions(res.data.results || []);
             } catch (err) {
                 console.error('Error fetching capability suggestions:', err);
@@ -301,7 +290,7 @@ export default function App() {
                 return;
             }
 
-            const res = await axios.get('http://localhost:7001/get_interface_type_counts', {
+            const res = await axios.get('http://localhost:7000/get_interface_type_counts', {
                 params: { domain, capability }
             });
 
@@ -322,7 +311,7 @@ export default function App() {
     // Fetch nodes by domain, capability, and interface type
     const fetchNodesByInterfaceType = async (type) => {
         try {
-            const res = await axios.get('http://localhost:7001/get_nodes_by_d_c_interface', {
+            const res = await axios.get('http://localhost:7000/get_nodes_by_d_c_interface', {
                 params: { domain, capability, interface_type: type }
             });
             setInterfaceResults(res.data.results);
@@ -335,7 +324,7 @@ export default function App() {
     const fetchArchSuggestions = async (val) => {
         if (val.length >= 3) {
             try {
-                const res = await axios.get('http://localhost:7001/get_arch_names', { params: { q: val } });
+                const res = await axios.get('http://localhost:7000/get_arch_names', { params: { q: val } });
                 setArchSuggestions(res.data.results || []);
             } catch (err) {
                 console.error('Error fetching architecture name suggestions:', err);
@@ -372,7 +361,7 @@ export default function App() {
       setEdges([]);
       setNodes([]);
       setComplexityTable([]);
-      const res= await axios.post("http://localhost:7001/upload/", formData, {headers: { "Content-Type": "multipart/form-data" },});
+      const res= await axios.post("http://localhost:7000/upload/", formData, {headers: { "Content-Type": "multipart/form-data" },});
       const { mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons } = res.data;
       const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
       setMermaidCode(String(cleanCode));
@@ -421,7 +410,7 @@ export default function App() {
         setNodes([]);
         setComplexityTable([]);
 
-        const res = await axios.post("http://localhost:7001/process_confluence/", formData, {
+        const res = await axios.post("http://localhost:7000/process_confluence/", formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
 
@@ -470,7 +459,7 @@ export default function App() {
       setNodes([]);
       setComplexityTable([]);
 
-      const res= await axios.get("http://localhost:7001/get_arch_code", { params: { arch_name: archName }});
+      const res= await axios.get("http://localhost:7000/get_arch_code", { params: { arch_name: archName }});
       const { arch_name, mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons } = res.data;
       const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
       setArchName(arch_name);
@@ -498,7 +487,7 @@ export default function App() {
         formData.append("session_id", sessionId);
 
         try {
-            const res = await axios.post("http://localhost:7001/chat/", formData);
+            const res = await axios.post("http://localhost:7000/chat/", formData);
             const data = res.data;
             // setLatestResponse(data.response || "");
             const isMermaid = query?.includes("mermaid diagram") && (data.response?.includes("graph TD") || data.response?.includes("graph LR") || data.response?.includes("graph BT") || data.response?.includes("graph RL"));
@@ -512,136 +501,6 @@ export default function App() {
         } finally {
             setSending(false);
         }
-    };
-
-    /* Handle for Target Planner and Pattern Selector */
-
-    const handleTargetPlanner = async () => {
-      if (!archName) return alert("Select architecture name first.");
-
-      const url = 'http://localhost:7001/agent/target-planner/stream';
-      const formData = new FormData();
-      formData.append("arch_name", archName);
-
-      setIsTargetStreaming(true);
-      setTargetStreamResponses([]);  // Clear previous
-
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok || !response.body) {
-          alert("Failed to start Target Planner stream");
-          setIsTargetStreaming(false);
-          return;
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let buffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const parts = buffer.split("\n\n");
-
-          for (let i = 0; i < parts.length - 1; i++) {
-            const line = parts[i].trim();
-            if (line.startsWith("data: ")) {
-              const jsonStr = line.replace("data: ", "");
-              try {
-                const parsed = JSON.parse(jsonStr);
-                const [key, value] = Object.entries(parsed)[0];
-                let content = "";
-                if (typeof value === "string") {
-                  content = value;
-                } else if (typeof value === "object") {
-                  content = value.extracted || value.assessment || Object.values(value).join("\n") || JSON.stringify(value, null, 2);
-                } else {
-                  content = String(value);
-                }
-                setTargetStreamResponses(prev => [...prev, { key, content }]);
-              } catch (err) {
-                console.error("Failed to parse SSE JSON:", err);
-              }
-            }
-          }
-
-          buffer = parts[parts.length - 1];
-        }
-      } catch (err) {
-        console.error("Target Planner streaming failed:", err);
-        alert("Error running Target Planner");
-      } finally {
-        setIsTargetStreaming(false);
-      }
-    };
-
-    const handlePatternSelector = async () => {
-      if (!archName) return alert("Select architecture name first.");
-
-      setIsPatternStreaming(true);
-      setPatternStreamResponses([]);
-
-      const url = 'http://localhost:7001/agent/pattern-selector/stream';
-      const formData = new FormData();
-      formData.append("arch_name", archName);
-      try {
-          const response = await fetch(url, {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!response.ok || !response.body) {
-            alert("Failed to start streaming");
-            setIsPatternStreaming(false);
-            return;
-          }
-
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder("utf-8");
-          let buffer = "";
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-
-            const parts = buffer.split("\n\n"); // Each SSE event ends with double newline
-
-            for (let i = 0; i < parts.length - 1; i++) {
-              const line = parts[i].trim();
-              if (line.startsWith("data: ")) {
-                const jsonStr = line.replace("data: ", "");
-                try {
-                  const parsed = JSON.parse(jsonStr);
-                  const [key, value] = Object.entries(parsed)[0];
-                  let content = "";
-                  if (typeof value === "object") {
-                    content = value.info || value.summary || JSON.stringify(value, null, 2);
-                  } else {
-                    content = String(value);
-                  }
-
-                  setPatternStreamResponses(prev => [...prev, { key, content }]);
-                } catch (err) {
-                  console.error("Failed to parse SSE JSON:", err);
-                }
-              }
-            }
-            buffer = parts[parts.length - 1]; // keep partial chunk
-          }
-        } catch (err) {
-            console.error("Streaming error:", err);
-            alert("Pattern Selector stream failed.");
-          } finally {
-            setIsPatternStreaming(false);       // hide spinner when done
-          }
     };
 
     /* Handle Download AaC */
@@ -661,14 +520,14 @@ export default function App() {
 
         const formData = new FormData();
         formData.append("session_id", sessionId);
-        axios.post("http://localhost:7001/reset_session/", formData)
+        axios.post("http://localhost:7000/reset_session/", formData)
             .then(() => {
                 setChatHistory([]);
                 // setLatestResponse("");
                 console.log("Session reset successful");
 
          // Generate new session
-            axios.post("http://localhost:7001/generate_session/")
+            axios.post("http://localhost:7000/generate_session/")
                 .then(res => {
                     setSessionId(res.data.session_id);
                     console.log("New session started:", res.data.session_id);
@@ -758,7 +617,6 @@ export default function App() {
                     <button className={`tab-button ${activeTab === "explorer" ? "active" : ""}`} onClick={() => setActiveTab("explorer")}>DepScan Agent</button>
                     <button className={`tab-button ${activeTab === "chat" ? "active" : ""}`} onClick={() => setActiveTab("chat")}>ArchBOT</button>
                     <button className={`tab-button ${activeTab === "domain_view" ? "active" : ""}`} onClick={() => setActiveTab("domain_view")}>Arch Insights</button>
-                    <button className={`tab-button ${activeTab === "agentic_ai" ? "active" : ""}`} onClick={() => setActiveTab("agentic_ai")}>Agentic AI</button>
                 </div>
             </div>
             <div className="tab-content">
@@ -1150,71 +1008,6 @@ export default function App() {
                   </div>
                 </div>
               )}
-
-            {/* Agentic AI Tab */}
-            {activeTab === "agentic_ai" && (
-              <div className="flex-layout">
-                  <div className="left-panel">
-                    <h3>Agentic AI Cases</h3>
-
-                    <label>Select Architecture</label>
-                    <div className="suggestion-wrapper">
-                      <input
-                        type="text"
-                        className="input-box"
-                        value={archName}
-                        onChange={(e) => {
-                          setArchName(e.target.value);
-                          fetchArchSuggestions(e.target.value);
-                        }}
-                        placeholder="Enter Architecture Name"
-                      />
-                      {archSuggestions.length > 0 && (
-                        <ul className="suggestion-list">
-                          {archSuggestions.map((s, i) => (
-                            <li key={i} onClick={() => {
-                              setArchName(s);
-                              setArchSuggestions([]);
-                            }}>{s}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-
-                    <button className="primary-button" onClick={handleTargetPlanner} style={{ marginRight: '20px' }}>Target Planner</button>
-                    <button className="primary-button" onClick={handlePatternSelector}>Pattern Selector</button>
-                  </div>
-
-                  <div className="right-panel">
-
-                        <div className="chat-messages-container">
-                          {[...targetStreamResponses, ...patternStreamResponses].map((msg, idx) => (
-                            <div key={idx} className="chat-message system-message">
-                              <div className="message-content">
-                                <h4 style={{ marginBottom: "6px", color: "#d9534f" }}>{msg.key.replace(/_/g, ' ').toUpperCase()}</h4>
-                                <ReactMarkdown>{msg.content}</ReactMarkdown>
-                              </div>
-                            </div>
-                          ))}
-
-                          {(isTargetStreaming || isPatternStreaming) && (
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-                              <span className="blinking-icon">⏳</span>
-                              <span>{isTargetStreaming ? "Running Target Planner..." : "Running Pattern Selector..."}</span>
-                            </div>
-                          )}
-                          <div ref={agenticStreamEndRef} />
-                        </div>
-
-                        {!(isTargetStreaming || isPatternStreaming) &&
-                            targetStreamResponses.length === 0 &&
-                            patternStreamResponses.length === 0 && (
-                              <p>No output yet. Run a selector to generate insights.</p>
-                          )}
-                    </div>
-                </div>
-            )}
-
               </div>
         </div>
     );
