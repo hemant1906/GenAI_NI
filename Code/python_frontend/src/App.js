@@ -803,7 +803,7 @@ export default function App() {
                     <button className={`tab-button ${activeTab === "explorer" ? "active" : ""}`} onClick={() => setActiveTab("explorer")}>DepScan Agent</button>
                     <button className={`tab-button ${activeTab === "chat" ? "active" : ""}`} onClick={() => setActiveTab("chat")}>ArchBOT</button>
                     <button className={`tab-button ${activeTab === "domain_view" ? "active" : ""}`} onClick={() => setActiveTab("domain_view")}>Arch Insights</button>
-                    <button className={`tab-button ${activeTab === "agentic_ai" ? "active" : ""}`} onClick={() => setActiveTab("agentic_ai")}>Agentic AI</button>
+                    <button className={`tab-button ${activeTab === "agentic_ai" ? "active" : ""}`} onClick={() => setActiveTab("agentic_ai")}>Advanced Insights</button>
                 </div>
             </div>
             <div className="tab-content">
@@ -1200,7 +1200,7 @@ export default function App() {
             {activeTab === "agentic_ai" && (
               <div className="flex-layout">
                   <div className="left-panel">
-                    <h3>Agentic AI Cases</h3>
+                    <h3>Advanced Use Cases</h3>
 
                     <label>Select Architecture</label>
                     <div className="suggestion-wrapper">
