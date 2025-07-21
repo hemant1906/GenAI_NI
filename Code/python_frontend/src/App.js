@@ -521,6 +521,7 @@ export default function App() {
           if (!archName) return;
 
           setTargetStreamResponses([]);
+          setPatternStreamResponses([]);
           setIsTargetStreaming(true);
 
           try {
@@ -609,6 +610,7 @@ export default function App() {
           if (!archName) return;
 
           setPatternStreamResponses([]);
+          setTargetStreamResponses([]);
           setIsPatternStreaming(true);
 
           try {
