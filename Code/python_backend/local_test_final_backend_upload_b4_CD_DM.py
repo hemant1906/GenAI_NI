@@ -59,171 +59,74 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
         if asset_id.strip() == "":
             asset_id = "APP001"
 
+        '''
         # Structured Gemini Prompt
         prompt = """
         You are an expert Enterprise Architect. Analyze the provided system architecture diagram. From the diagram, extract the following:
 
-        1. **Mermaid** (The code must follow these specific formatting rules:
-        - DO NOT include word Mermaid or ```mermaid or other wrappers in the output. The code block should start with graph TD (instead of Mermaid title)
-        - Include a comment line with the group name before each subgraph, e.g., %% Digital Channels.
-        - The subgraph name itself must be in double quotes, e.g., subgraph "Digital Channels".
-        - Application node definitions must not have double quotes around the title, e.g., PBCP[Private Banking Client Portal].
-        - Include a %% Connections comment before listing the relationships.
-        - Relationships between systems must be represented in [Source System Code] -->|[Relationship Type]| [Target System Code] format. For example: APP001 -->|API| APP002.
-        - Remove any special characters like - or hyphen from the relationship type in [Source System Code] -->|[Relationship Type]| [Target System Code].
-        - Exclude <br> or </br> tags from the code.)
-        2. **Summary** (max 50 words)
-        3. **Description** (max 200 words)
-        4. **Applications List**, for each:
-           - Title
-           - Application node
-           - Application Group/Category
-           - Relationships with other components in natural language and should include source application node and target application node. 
-        
-        5. **System Complexity Table** showing:
-           - Component Name  
-           - Complexity Score (Low/Medium/High)  
-           - Reason for Complexity (e.g., Many integrations, legacy tech, critical path dependency)  
-        
-        6. **Pros** of this architecture considering scalability, maintainability, security, and integration complexity. Don't include **bold** markers in the result. Output should be like:
-        **Pros**
-        - Scalability: ...
-        - Maintainability: ...
-        7. **Cons** of this architecture considering scalability, maintainability, security, and integration complexity. Don't include **bold** markers in the result. Output should be like:
-        **Cons**
-        - Scalability: ...
-        - Integration Complexity: ...
-        8. **Class Diagram (Mermaid)**: The code must represent each application component from the diagram as a distinct class.
-            -   DO NOT include Mermaid or mermaid or other wrappers in the output. The code block should start with classDiagram.
-            -   Use Mermaid-compatible syntax only:
-                -   No quotes around relationship labels or cardinalities
-                -   No data types like `string`, `int`, `datetime`, etc. — only use attribute names
-                -   No visibility modifiers like `+` or `-`
-                -   No types (e.g., `string x`) in attributes
-                -   Format each class with just attribute names and method names:
-                    ```
-                    class ClassName {
-                        attribute1
-                        attribute2
-                        method1()
-                        method2()
-                    }
-                    ```
-            -   For each class:
-                -   Include 2–3 realistic **attribute names** (but no types)
-                -   Include 2–3 realistic **method names** with `()` (no input args needed)
-            -   Define relationships using Mermaid’s syntax:
-                -   ClassA --> ClassB : label
-            -   Do not use quotes around labels or class names.
-            -   Avoid unsupported features like generics, inheritance, or modifiers.
-            -   **ONLY** use standard ASCII space characters (` `) and newline characters (`\n`) for indentation and separation. **DO NOT** use non-breaking spaces or any other invisible control characters.
-            -   **Example Class Diagram Output Format:**
-                ```
-                classDiagram
-                    class ExampleApp {
-                        appName
-                        version
-                        init()
-                        shutdown()
-                    }
-                    class DataService {
-                        dataEndpoint
-                        status
-                        fetchData()
-                        updateData()
-                    }
-                    ExampleApp --> DataService : uses
-                ```
-        9. **Data Model (Mermaid ERD)**: Generate a production-level data model using Mermaid `erDiagram` syntax.
-            -   Use only Mermaid-compatible syntax.
-            -   Start with: `erDiagram`
-            -   Define **at least 10–15 entities** that cover the architecture:
-                -   Core business domains (Customer, Account, Identity, CRM, Transactions)
-                -   Integration & messaging (EventLog, ApiCalls)
-                -   Audit & Logging (AuditLog, DataLineage, SessionLog)
-                -   Governance & compliance (DataPolicy, QualityIssue)
-                -   System Configuration & Metadata
-            -   For each entity:
-                -   Use 3–6 attributes.
-                -   Use only `string` or `int` data types (represent datetime/boolean/float as `string`).
-                -   Do NOT use arrays, JSON, blob, or object.
-                -   Use only `CamelCase` or `PascalCase` for names — no underscores or quotes.
-            -   For relationships:
-                -   Use valid Mermaid cardinalities: `||--||`, `||--o{`, `}o--||`, `}o--o{`
-                -   Relationship labels **MUST NOT** contain spaces (e.g., use `: belongsTo` or `: tracksConfig` instead of `: belongs to` or `: tracks`). Use `camelCase` or `PascalCase` for multi-word labels.
-                -   Do NOT use quotes around labels (e.g., use `: owns` not `: "owns"`).
-            -   Include realistic audit fields where applicable:
-                -   `createdAt`, `updatedAt`, `createdBy`, `status`
-            -   Output must be valid Mermaid `erDiagram` and renderable without modification.
-            -   Ensure broad functional coverage: include entities related to user sessions, customer segmentation, master data, integration events, API tracking, data quality, and governance.
-            -   Use consistent naming and domain-driven terminology.
-            -   **ONLY** use standard ASCII space characters (` `) and newline characters (`\n`) for indentation and separation. **DO NOT** use non-breaking spaces or any other invisible control characters.
-            -   **Example Data Model (Mermaid ERD) Output Format:**
-                ```
-                erDiagram
-                    User {
-                        int UserID PK
-                        string Username
-                        string Email
-                        string CreatedAt
-                    }
-                    Product {
-                        int ProductID PK
-                        string ProductName
-                        string Price
-                        string Status
-                    }
-                    Order {
-                        int OrderID PK
-                        int UserID FK
-                        string OrderDate
-                        string TotalAmount
-                        string OrderStatus
-                    }
-                    User ||--o{ Order : places
-                    Product }o--|| Order : includes
-                ```
-        
-        Format your response as:
-        
-        **Mermaid**  
-        (The Mermaid code block should start here, without a title)
-        ...  
-        
-        **Summary**  
-        ...  
-        
-        **Description**  
-        ...  
-        
-        **Applications**  
-        - Title: ...  
-        - System Code: ...  
-        - Group: ...  
-        - Relationships:  
-          - ...  
-        
-        **System Complexity Table**  
-        | Component      | Complexity | Reason                       |  
-        |----------------|------------|------------------------------|  
-        | API Gateway    | High       | Central integration point    |  
-        | Identity Mgmt  | Medium     | Moderate coupling            |  
-        
-        **Pros**  
-        - ...  
-        
-        **Cons**  
-        - ...  
-        
-        **Class Diagram (Mermaid)** 
-        (The Class Diagram Mermaid code block)
-        ...
-        
-        **Data Model (Mermaid ERD)** 
-        (The Data Model Mermaid ERD code block)
-        ...
-        
-        The output must contain one clearly separated block per application, using the structure shown. No additional commentary or formatting is needed beyond the required fields.
+1. **Mermaid** (The code must follow these specific formatting rules:
+- DO NOT include word Mermaid or ```mermaid or other wrappers in the output. The code block should start with graph TD (instead of Mermaid title)
+- Include a comment line with the group name before each subgraph, e.g., %% Digital Channels.
+- The subgraph name itself must be in double quotes, e.g., subgraph "Digital Channels".
+- Application node definitions must not have double quotes around the title, e.g., PBCP[Private Banking Client Portal].
+- Include a %% Connections comment before listing the relationships.
+- Relationships between systems must be represented in [Source System Code] -->|[Relationship Type]| [Target System Code] format. For example: APP001 -->|API| APP002.
+- Remove any special characters like - or hyphen from the relationship type in [Source System Code] -->|[Relationship Type]| [Target System Code].
+- Exclude <br> or </br> tags from the code.)
+2. **Summary** (max 50 words)
+3. **Description** (max 200 words)
+4. **Applications List**, for each:
+   - Title
+   - Application node
+   - Application Group/Category
+   - Relationships with other components in natural language and should include source application node and target application node. 
+
+5. **System Complexity Table** showing:
+   - Component Name  
+   - Complexity Score (Low/Medium/High)  
+   - Reason for Complexity (e.g., Many integrations, legacy tech, critical path dependency)  
+
+6. **Pros** of this architecture considering scalability, maintainability, security, and integration complexity. Don't include **bold** markers in the result. Output should be like:
+**Pros**
+- Scalability: ...
+- Maintainability: ...
+7. **Cons** of this architecture considering scalability, maintainability, security, and integration complexity. Don't include **bold** markers in the result. Output should be like:
+**Cons**
+- Scalability: ...
+- Integration Complexity: ...
+
+Format your response as:
+
+**Mermaid**  
+(The Mermaid code block should start here, without a title)
+...  
+
+**Summary**  
+...  
+
+**Description**  
+...  
+
+**Applications**  
+- Title: ...  
+- System Code: ...  
+- Group: ...  
+- Relationships:  
+  - ...  
+
+**System Complexity Table**  
+| Component      | Complexity | Reason                       |  
+|----------------|------------|------------------------------|  
+| API Gateway    | High       | Central integration point    |  
+| Identity Mgmt  | Medium     | Moderate coupling            |  
+
+**Pros**  
+- ...  
+
+**Cons**  
+- ...  
+
+The output must contain one clearly separated block per application, using the structure shown. No additional commentary or formatting is needed beyond the required fields.
 """
 
         # Gemini API Call
@@ -246,16 +149,17 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
         
         result = gemini_resp.json()
 
-        '''
-        filename = f"new_test_response_core_asset_{asset_id}.json"
+        filename = f"test_response_core_asset_{asset_id}.json"
         with open(filename, "w") as f:
             json.dump(result, f, indent=2)
-        
-        with open("new_test_response_core_asset_APP001.json", "r") as f:
-            result = json.load(f)
-        '''
 
-        # print('loaded')
+        '''
+        print('Entered')
+        with open("test_response_core_asset_APP001.json", "r") as f:
+            result = json.load(f)
+
+
+        print('loaded')
 
         if "candidates" not in result:
             raise HTTPException(status_code=500, detail=result)
@@ -273,20 +177,18 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
         complexity_table = []
         pros = []
         cons = []
-        class_diagram = ""
-        data_model = ""
 
         for i, section in enumerate(sections):
             if section.strip().lower() == "mermaid":
                 mermaid_code = sections[i + 1].strip()
                 mermaid = clean_mermaid_code(mermaid_code)
-                # print('mermaid done')
+                print('mermaid done')
             elif section.strip().lower() == "summary":
                 summary = sections[i + 1].strip()
-                # print('summary done')
+                print('summary done')
             elif section.strip().lower() == "description":
                 description = sections[i + 1].strip()
-                # print('description done')
+                print('description done')
             elif section.strip().lower() == "applications":
                 apps_text = sections[i + 1].strip()
                 app_blocks = re.split(r"-\s*Title:", apps_text)
@@ -308,7 +210,7 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
                         "group": group,
                         "relationships": relationships
                     })
-                    # print('application done')
+                    print('application done')
             elif "System Complexity Table" in section:
                 table_text = sections[i + 1].strip()
                 rows = table_text.splitlines()[2:]  # Skip header lines
@@ -321,7 +223,7 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
                             "complexity": cols[1],
                             "reason": cols[2]
                         })
-                # print('complexity done')
+                print('complexity done')
             elif section.strip().lower() == "pros":
                 raw_pros = sections[i + 1].strip()
                 pros = [
@@ -329,7 +231,7 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
                     for line in raw_pros.splitlines()
                     if line.strip().startswith("-")
                 ]
-                # print('pros done')
+                print('pros done')
             elif section.strip().lower() == "cons":
                 raw_cons = sections[i + 1].strip()
                 cons = [
@@ -337,22 +239,14 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
                     for line in raw_cons.splitlines()
                     if line.strip().startswith("-")
                 ]
-                # print('cons done')
-            elif section.strip().lower() == "class diagram (mermaid)":
-                classdiagram = sections[i + 1].strip()
-                class_diagram = clean_class_diagram(classdiagram)
-                print('class diagram done')
-            elif section.strip().lower() == "data model (mermaid erd)":
-                datamodel = sections[i + 1].strip()
-                data_model = clean_data_model(datamodel)
-                print('data model done')
+                print('cons done')
 
         # Store Mermaid to PostgreSQL
         diagram_id = f"DIAGRAM_{str(uuid4())[:8]}"
         with PG_CONN.cursor() as cur:
             cur.execute(
-                "INSERT INTO DIAGRAMS (diagram_id, diagram_mermaid_code, diagram_name, diagram_class_code, diagram_data_model) VALUES (%s, %s, %s, %s, %s)",
-                (diagram_id, mermaid, diagram_name, class_diagram, data_model),
+                "INSERT INTO DIAGRAMS (diagram_id, diagram_mermaid_code, diagram_name) VALUES (%s, %s, %s)",
+                (diagram_id, mermaid, diagram_name),
             )
             PG_CONN.commit()
 
@@ -365,18 +259,18 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
                     (asset_id, diagram_id),
                 )
             PG_CONN.commit()
-        # print('pgsql done')
+        print('pgsql done')
 
         # Store Mermaid to Neo4j
         nodes, edges = parse_mermaid(mermaid)
-        # print('neo4j entered')
+        print('neo4j entered')
         with driver.session() as session:
             session.execute_write(store_graph, diagram_id, nodes, edges)
-        # print('neo4j done')
+        print('neo4j done')
 
         # Store diagram-level doc
         store_diagram_summary(diagram_id, diagram_name, summary, description, pros, cons)
-        # print('vector db for diagram done')
+        print('vector db for diagram done')
 
         # Store each application separately
         for app in applications:
@@ -388,12 +282,12 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
                 "diagram_id": diagram_id,
                 "diagram_name": diagram_name
             })
-        # print('vector db for applications done')
+        print('vector db for applications done')
 
         # Store complexity data
         for entry in complexity_table:
             store_complexity_entry(diagram_id, diagram_name, entry['component'], entry['complexity'], entry['reason'])
-        # print('vector db for complexity done')
+        print('vector db for complexity done')
 
         return {
             "diagram_id": diagram_id,
@@ -404,17 +298,164 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
             "edges": edges,
             "complexity_table": complexity_table,
             "pros": pros,
-            "cons": cons,
-            "class_diagram": class_diagram,
-            "data_model": data_model
+            "cons": cons
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- Bulk Upload --- #
+
+@app.post("/bulk_upload/")
+def bulk_upload_image():
+    try:
+        for i in range(3, 10):  # range (x,y) -- x inclusive and y-1 inclusive
+            index = f"{i:03d}"  # formats 1 as '001', 2 as '002', ..., 9 as '009'
+            asset_id = f"APP{index}"
+            diagram_name = f"ARCH-{index}"
+            filename = f"test_response_core_asset_{asset_id}.json"
+
+            with open(filename, "r") as f:
+                result = json.load(f)
+
+            print('loaded: ', filename, diagram_name)
+
+            if "candidates" not in result:
+                raise HTTPException(status_code=500, detail=result)
+
+            output_text = result["candidates"][0]["content"]["parts"][0]["text"]
+
+            # Example response chunks
+            sections = re.split(r"\*\*(.*?)\*\*", output_text)
+
+            # Parse Response
+            mermaid = ""
+            summary = ""
+            description = ""
+            applications = []
+            complexity_table = []
+            pros = []
+            cons = []
+
+            for i, section in enumerate(sections):
+                if section.strip().lower() == "mermaid":
+                    mermaid_code = sections[i + 1].strip()
+                    mermaid = clean_mermaid_code(mermaid_code)
+                    print('mermaid done')
+                elif section.strip().lower() == "summary":
+                    summary = sections[i + 1].strip()
+                    print('summary done')
+                elif section.strip().lower() == "description":
+                    description = sections[i + 1].strip()
+                    print('description done')
+                elif section.strip().lower() == "applications":
+                    apps_text = sections[i + 1].strip()
+                    app_blocks = re.split(r"-\s*Title:", apps_text)
+
+                    for block in app_blocks[1:]:
+                        lines = block.strip().split("\n")
+                        title = lines[0].strip()
+                        system_code = lines[1].replace("System Code:", "").strip()
+                        group = lines[2].replace("Group:", "").strip()
+                        relationships = [
+                            line.strip("- ").strip()
+                            for line in lines[4:]
+                            if line.strip().startswith("-")
+                        ]
+
+                        applications.append({
+                            "title": title,
+                            "system_code": system_code,
+                            "group": group,
+                            "relationships": relationships
+                        })
+                        print('application done')
+                elif "System Complexity Table" in section:
+                    table_text = sections[i + 1].strip()
+                    rows = table_text.splitlines()[2:]  # Skip header lines
+
+                    for row in rows:
+                        cols = [col.strip() for col in row.split("|") if col.strip()]
+                        if len(cols) == 3:
+                            complexity_table.append({
+                                "component": cols[0],
+                                "complexity": cols[1],
+                                "reason": cols[2]
+                            })
+                    print('complexity done')
+                elif section.strip().lower() == "pros":
+                    raw_pros = sections[i + 1].strip()
+                    pros = [
+                        line.lstrip("- ").strip()
+                        for line in raw_pros.splitlines()
+                        if line.strip().startswith("-")
+                    ]
+                    print('pros done')
+                elif section.strip().lower() == "cons":
+                    raw_cons = sections[i + 1].strip()
+                    cons = [
+                        line.lstrip("- ").strip()
+                        for line in raw_cons.splitlines()
+                        if line.strip().startswith("-")
+                    ]
+                    print('cons done')
+
+            # Store Mermaid to PostgreSQL
+            diagram_id = f"DIAGRAM_{str(uuid4())[:8]}"
+            with PG_CONN.cursor() as cur:
+                cur.execute(
+                    "INSERT INTO DIAGRAMS (diagram_id, diagram_mermaid_code, diagram_name) VALUES (%s, %s, %s)",
+                    (diagram_id, mermaid, diagram_name),
+                )
+                PG_CONN.commit()
+
+                cur.execute("SELECT * FROM ASSETS WHERE asset_id = %s", (asset_id,))
+                if cur.fetchone():
+                    cur.execute("UPDATE ASSETS SET asset_diagram_id = %s WHERE asset_id = %s", (diagram_id, asset_id))
+                else:
+                    cur.execute(
+                        "INSERT INTO ASSETS (asset_id, asset_diagram_id, asset_name, asset_description) VALUES (%s, %s, '', '')",
+                        (asset_id, diagram_id),
+                    )
+                PG_CONN.commit()
+            print('pgsql done')
+
+            # Store Mermaid to Neo4j
+            nodes, edges = parse_mermaid(mermaid)
+            print('neo4j entered')
+            with driver.session() as session:
+                session.execute_write(store_graph, diagram_id, nodes, edges)
+            print('neo4j done')
+
+            # Store diagram-level doc
+            store_diagram_summary(diagram_id, diagram_name, summary, description, pros, cons)
+            print('vector db for diagram done')
+
+            # Store each application separately
+            for app in applications:
+                store_application({
+                    "title": app["title"],
+                    "system_code": app["system_code"],
+                    "group": app["group"],
+                    "relationships": app["relationships"],
+                    "diagram_id": diagram_id,
+                    "diagram_name": diagram_name
+                })
+            print('vector db for applications done')
+
+            # Store complexity data
+            for entry in complexity_table:
+                store_complexity_entry(diagram_id, diagram_name, entry['component'], entry['complexity'], entry['reason'])
+            print('vector db for complexity done')
+
+        return {
+            "Status": "Done"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- Upload via Confluence URL --- #
-
 CONFLUENCE_API_TOKEN = os.getenv("CONFLUENCE_API_TOKEN")
 CONFLUENCE_EMAIL = os.getenv("CONFLUENCE_EMAIL")
 
@@ -426,6 +467,7 @@ def process_confluence_page(diagram_name: str = Form(...), asset_id: str = Form(
         if asset_id.strip() == "":
             asset_id = "APP001"
 
+        '''
         # Extract page ID from URL
         if "/pages/" not in confluence_url:
             raise HTTPException(status_code=400, detail="Invalid Confluence URL format")
@@ -520,96 +562,6 @@ def process_confluence_page(diagram_name: str = Form(...), asset_id: str = Form(
         **Cons**
         - Scalability: ...
         - Integration Complexity: ...
-        8. **Class Diagram (Mermaid)**: The code must represent each application component from the diagram as a distinct class.
-            -   DO NOT include Mermaid or mermaid or other wrappers in the output. The code block should start with classDiagram.
-            -   Use Mermaid-compatible syntax only:
-                -   No quotes around relationship labels or cardinalities
-                -   No data types like `string`, `int`, `datetime`, etc. — only use attribute names
-                -   No visibility modifiers like `+` or `-`
-                -   No types (e.g., `string x`) in attributes
-                -   Format each class with just attribute names and method names:
-                    ```
-                    class ClassName {
-                        attribute1
-                        attribute2
-                        method1()
-                        method2()
-                    }
-                    ```
-            -   For each class:
-                -   Include 2–3 realistic **attribute names** (but no types)
-                -   Include 2–3 realistic **method names** with `()` (no input args needed)
-            -   Define relationships using Mermaid’s syntax:
-                -   ClassA --> ClassB : label
-            -   Do not use quotes around labels or class names.
-            -   Avoid unsupported features like generics, inheritance, or modifiers.
-            -   **ONLY** use standard ASCII space characters (` `) and newline characters (`\n`) for indentation and separation. **DO NOT** use non-breaking spaces or any other invisible control characters.
-            -   **Example Class Diagram Output Format:**
-                ```
-                classDiagram
-                    class ExampleApp {
-                        appName
-                        version
-                        init()
-                        shutdown()
-                    }
-                    class DataService {
-                        dataEndpoint
-                        status
-                        fetchData()
-                        updateData()
-                    }
-                    ExampleApp --> DataService : uses
-                ```
-        9. **Data Model (Mermaid ERD)**: Generate a production-level data model using Mermaid `erDiagram` syntax.
-            -   Use only Mermaid-compatible syntax.
-            -   Start with: `erDiagram`
-            -   Define **at least 10–15 entities** that cover the architecture:
-                -   Core business domains (Customer, Account, Identity, CRM, Transactions)
-                -   Integration & messaging (EventLog, ApiCalls)
-                -   Audit & Logging (AuditLog, DataLineage, SessionLog)
-                -   Governance & compliance (DataPolicy, QualityIssue)
-                -   System Configuration & Metadata
-            -   For each entity:
-                -   Use 3–6 attributes.
-                -   Use only `string` or `int` data types (represent datetime/boolean/float as `string`).
-                -   Do NOT use arrays, JSON, blob, or object.
-                -   Use only `CamelCase` or `PascalCase` for names — no underscores or quotes.
-            -   For relationships:
-                -   Use valid Mermaid cardinalities: `||--||`, `||--o{`, `}o--||`, `}o--o{`
-                -   Relationship labels **MUST NOT** contain spaces (e.g., use `: belongsTo` or `: tracksConfig` instead of `: belongs to` or `: tracks`). Use `camelCase` or `PascalCase` for multi-word labels.
-                -   Do NOT use quotes around labels (e.g., use `: owns` not `: "owns"`).
-            -   Include realistic audit fields where applicable:
-                -   `createdAt`, `updatedAt`, `createdBy`, `status`
-            -   Output must be valid Mermaid `erDiagram` and renderable without modification.
-            -   Ensure broad functional coverage: include entities related to user sessions, customer segmentation, master data, integration events, API tracking, data quality, and governance.
-            -   Use consistent naming and domain-driven terminology.
-            -   **ONLY** use standard ASCII space characters (` `) and newline characters (`\n`) for indentation and separation. **DO NOT** use non-breaking spaces or any other invisible control characters.
-            -   **Example Data Model (Mermaid ERD) Output Format:**
-                ```
-                erDiagram
-                    User {
-                        int UserID PK
-                        string Username
-                        string Email
-                        string CreatedAt
-                    }
-                    Product {
-                        int ProductID PK
-                        string ProductName
-                        string Price
-                        string Status
-                    }
-                    Order {
-                        int OrderID PK
-                        int UserID FK
-                        string OrderDate
-                        string TotalAmount
-                        string OrderStatus
-                    }
-                    User ||--o{ Order : places
-                    Product }o--|| Order : includes
-                ```
         
         Format your response as:
         
@@ -642,14 +594,6 @@ def process_confluence_page(diagram_name: str = Form(...), asset_id: str = Form(
         **Cons**  
         - ...  
         
-        **Class Diagram (Mermaid)** 
-        (The Class Diagram Mermaid code block)
-        ...
-        
-        **Data Model (Mermaid ERD)** 
-        (The Data Model Mermaid ERD code block)
-        ...
-        
         The output must contain one clearly separated block per application, using the structure shown. No additional commentary or formatting is needed beyond the required fields.
         """
 
@@ -672,13 +616,12 @@ def process_confluence_page(diagram_name: str = Form(...), asset_id: str = Form(
         )
 
         result = gemini_resp.json()
-
+        
         '''
 
-        with open("new_test_response_core_asset_APP001.json", "r") as f:
+        with open("test_response_core_asset_APP001.json", "r") as f:
             result = json.load(f)
 
-        '''
 
         if "candidates" not in result:
             raise HTTPException(status_code=500, detail=result)
@@ -696,8 +639,6 @@ def process_confluence_page(diagram_name: str = Form(...), asset_id: str = Form(
         complexity_table = []
         pros = []
         cons = []
-        class_diagram = ""
-        data_model = ""
 
         for i, section in enumerate(sections):
             if section.strip().lower() == "mermaid":
@@ -761,21 +702,13 @@ def process_confluence_page(diagram_name: str = Form(...), asset_id: str = Form(
                     if line.strip().startswith("-")
                 ]
                 # print('cons done')
-            elif section.strip().lower() == "class diagram (mermaid)":
-                classdiagram = sections[i + 1].strip()
-                class_diagram = clean_class_diagram(classdiagram)
-                # print('class diagram done')
-            elif section.strip().lower() == "data model (mermaid erd)":
-                datamodel = sections[i + 1].strip()
-                data_model = clean_data_model(datamodel)
-                # print('data model done')
 
         # Store Mermaid to PostgreSQL
         diagram_id = f"DIAGRAM_{str(uuid4())[:8]}"
         with PG_CONN.cursor() as cur:
             cur.execute(
-                "INSERT INTO DIAGRAMS (diagram_id, diagram_mermaid_code, diagram_name, diagram_class_code, diagram_data_model) VALUES (%s, %s, %s, %s, %s)",
-                (diagram_id, mermaid, diagram_name, class_diagram, data_model),
+                "INSERT INTO DIAGRAMS (diagram_id, diagram_mermaid_code, diagram_name) VALUES (%s, %s, %s)",
+                (diagram_id, mermaid, diagram_name),
             )
             PG_CONN.commit()
 
@@ -827,9 +760,7 @@ def process_confluence_page(diagram_name: str = Form(...), asset_id: str = Form(
             "edges": edges,
             "complexity_table": complexity_table,
             "pros": pros,
-            "cons": cons,
-            "class_diagram": class_diagram,
-            "data_model": data_model
+            "cons": cons
         }
 
     except Exception as e:
@@ -851,11 +782,11 @@ def autocomplete_arch_names(q: str = Query(..., min_length=3)):
 # Updating for more content in view #
 @app.get("/get_arch_code")
 def get_arch_code(arch_name: str = Query(...)):
-
+    print(arch_name)
     with PG_CONN.cursor() as cur:
-        cur.execute("SELECT diagram_mermaid_code, diagram_class_code, diagram_data_model FROM diagrams WHERE diagram_name = %s ORDER BY UPDATED_AT DESC", (arch_name,))
+        cur.execute("SELECT diagram_mermaid_code FROM diagrams WHERE diagram_name = %s ORDER BY UPDATED_AT DESC", (arch_name,))
         result = cur.fetchone()
-
+        print(result)
         if not result:
             return JSONResponse(status_code=404, content={"error": "No diagram found with this name"})
 
@@ -917,6 +848,9 @@ def get_arch_code(arch_name: str = Query(...)):
 
         # For nodes and edges
         nodes, edges = parse_mermaid(result[0])
+        print(nodes)
+        print('++++++++')
+        print(edges)
 
         return {
             "arch_name": arch_name,
@@ -927,9 +861,7 @@ def get_arch_code(arch_name: str = Query(...)):
             "edges": edges,
             "complexity_table": complexity_table,
             "pros": pros,
-            "cons": cons,
-            "class_diagram": result[1],
-            "data_model": result[2]
+            "cons": cons
         }
 
 # --- Chat Section with simple RAM based chat history --- #
@@ -1005,6 +937,7 @@ def chat(query: str = Form(...), session_id: str = Form(...)):
             results.append(f"{meta.get('source', '')}: {doc}")
 
         context_docs = "\n\n".join(results) if results else "No relevant documents found."
+        print(context_docs)
 
         full_prompt = f"""
 You are an expert system assistant. Based on the following {collection.replace('_', ' ')} information, answer the question clearly:
@@ -1274,103 +1207,6 @@ def clean_mermaid_code(raw: str) -> str:
         lines = lines[:-1]
     return "\n".join(lines).strip()
 
-def clean_class_diagram(raw: str) -> str:
-    """
-    Cleans and extracts the class diagram code from the raw model output.
-    It specifically removes Markdown code fences (```classDiagram and ```)
-    and replaces non-breaking spaces with standard spaces.
-    Ensures 'classDiagram' is the very first line of the output.
-    """
-    lines = raw.strip().splitlines()
-    cleaned_lines = []
-    in_code_block = False
-
-    # Identify the start of the classDiagram code block.
-    # We look for "```classDiagram" or a generic "```mermaid".
-    # The actual "classDiagram" keyword should be the *first line* of the content.
-    start_delimiter_found = False
-
-    for line in lines:
-        stripped_line = line.strip()
-
-        if not in_code_block:
-            # Look for the start of the code block
-            if stripped_line.startswith("```classDiagram"):
-                in_code_block = True
-                start_delimiter_found = True
-                continue  # Skip the fence line
-            elif stripped_line.startswith("```mermaid"):  # Fallback for generic mermaid block
-                # If we detect generic 'mermaid' block, we'll try to find 'classDiagram' inside
-                in_code_block = True
-                continue  # Skip the fence line
-        else:
-            # We are inside a code block
-            if stripped_line == "```":
-                in_code_block = False
-                break  # Found the end of the code block, stop processing
-            else:
-                # Replace non-breaking spaces (\xa0) and ensure ASCII characters
-                clean_line = line.replace('\xa0', ' ').encode('ascii', 'ignore').decode('ascii')
-                cleaned_lines.append(clean_line)
-
-    final_output = "\n".join(cleaned_lines).strip()
-
-    # Ensure 'classDiagram' is the absolute first line of the mermaid content
-    if not final_output.startswith("classDiagram"):
-        # If the model didn't put it on the first line after the fence, add it.
-        # This handles cases where model might output something like:
-        # ```classDiagram
-        #    class MyClass { ... }
-        # where 'classDiagram' is part of the fence and not the first content line.
-        return f"classDiagram\n{final_output}"
-
-    return final_output
-
-
-def clean_data_model(raw: str) -> str:
-    """
-    Cleans and extracts the ER diagram code from the raw model output.
-    It specifically removes Markdown code fences (```erDiagram and ```)
-    and replaces non-breaking spaces with standard spaces.
-    Ensures 'erDiagram' is the very first line of the output.
-    """
-    lines = raw.strip().splitlines()
-    cleaned_lines = []
-    in_code_block = False
-
-    # Identify the start of the erDiagram code block.
-    start_delimiter_found = False
-
-    for line in lines:
-        stripped_line = line.strip()
-
-        if not in_code_block:
-            # Look for the start of the code block
-            if stripped_line.startswith("```erDiagram"):
-                in_code_block = True
-                start_delimiter_found = True
-                continue  # Skip the fence line
-            elif stripped_line.startswith("```mermaid"):  # Fallback for generic mermaid block
-                in_code_block = True
-                continue  # Skip the fence line
-        else:
-            # We are inside a code block
-            if stripped_line == "```":
-                in_code_block = False
-                break  # Found the end of the code block, stop processing
-            else:
-                # Replace non-breaking spaces (\xa0) and ensure ASCII characters
-                clean_line = line.replace('\xa0', ' ').encode('ascii', 'ignore').decode('ascii')
-                cleaned_lines.append(clean_line)
-
-    final_output = "\n".join(cleaned_lines).strip()
-
-    # Ensure 'erDiagram' is the absolute first line of the mermaid content
-    if not final_output.startswith("erDiagram"):
-        return f"erDiagram\n{final_output}"
-
-    return final_output
-
 def extract_between(text, start, end):
     return text.split(start, 1)[-1].split(end, 1)[0]
 
@@ -1426,12 +1262,14 @@ def parse_mermaid(mermaid_code):
                     "target": tgt,
                     "label": label
                 })
-
+        print(nodes)
+        print(edges)
     return nodes, edges
 
 
 def store_graph(tx, diagram_id, nodes, edges):
     for node in nodes:
+        print(node)
         tx.run(
             """
             MERGE (n:Node {id: $id, diagram_id: $diagram_id})
@@ -1444,7 +1282,9 @@ def store_graph(tx, diagram_id, nodes, edges):
             group=node.get("group", "")
         )
 
+
     for edge in edges:
+        print(edge)
         tx.run(
             f"MATCH (a:Node {{id: $src, diagram_id: $diagram_id}}), (b:Node {{id: $tgt, diagram_id: $diagram_id}}) "
             f"MERGE (a)-[r:{edge['label'].upper()}]->(b)"

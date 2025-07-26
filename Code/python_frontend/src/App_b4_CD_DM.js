@@ -62,111 +62,6 @@ function openDiagramViewer(diagramName, mermaidCode) {
     };
 }
 
-function sanitizeMermaidClassDiagram(raw) {
-  // First, aggressively replace non-breaking spaces with standard spaces
-  // This is crucial if the model is consistently outputting them
-  let cleaned = raw.replace(/\u00A0/g, ' '); // Replace non-breaking space (U+00A0) with standard space (U+0020)
-
-  // Now apply other sanitization steps
-  cleaned = cleaned
-    // Removes quotes around relationship labels (e.g., : "label" -> : label)
-    // and ensures there's only one space after colon
-    .replace(/: *"?([a-zA-Z0-9_]+)"?/g, ': $1')
-    // This regex looks problematic for class diagrams, it seems more for ERD relationships
-    // and might incorrectly reformat attributes or methods.
-    // If you're trying to fix multi-space indentation, a different approach is needed.
-    // .replace(/\n\s+([a-zA-Z0-9_]+) *:([a-zA-Z0-9_]+)/g, '\n$1 : $2')
-    // If you're trying to normalize indentation:
-    .replace(/^( *)(\S.*)/gm, (match, p1, p2) => {
-        // This is a more robust way to normalize leading whitespace to 4 spaces
-        // Adjust the '4' if your diagram uses a different standard indent
-        const indentLevel = Math.floor(p1.length / 4);
-        return '    '.repeat(indentLevel) + p2;
-    })
-    // Removes quotes around cardinalities (e.g., "1..*" -> 1..*)
-    .replace(/"(\d|\*|\d\.\.\d)"/g, '$1')
-    // Removes visibility modifiers (+ or -) at the start of a line, globally and multi-line
-    .replace(/^\s*[+-]/gm, '')
-    // Aggressive removal of any remaining non-ASCII characters if not caught by \u00A0 replacement
-    .replace(/[^\u0020-\u007E\n]/g, ''); // Ensure newline is not removed
-
-    return cleaned;
-}
-
-function sanitizeMermaidERDiagram(raw) {
-  // CRITICAL: First, aggressively replace non-breaking spaces with standard spaces.
-  // This addresses the primary issue identified in your previous outputs (\u00A0).
-  let cleaned = raw.replace(/\u00A0/g, ' ');
-
-  // General whitespace normalization: replace multiple spaces with a single space,
-  // but be careful not to collapse essential indentation or newline structures.
-  // This is a broader fix if other inconsistent whitespace appears.
-  // cleaned = cleaned.replace(/ {2,}/g, ' '); // Use with caution, can break specific indentation
-
-  // More robust indentation normalization: ensure consistent leading spaces
-  // This will convert any leading sequence of spaces (or potentially tabs if present)
-  // to consistent 4-space indents. Adjust '4' if your target standard is different.
-  cleaned = cleaned.replace(/^( *)(\S.*)/gm, (match, p1, p2) => {
-      // Calculate effective indent level based on original leading whitespace
-      const indentLevel = Math.floor(p1.length / 4);
-      return '    '.repeat(indentLevel) + p2;
-  });
-
-  // Remove any remaining non-ASCII characters that are not standard spaces or newlines.
-  // This acts as a final catch-all for other problematic invisible characters.
-  cleaned = cleaned.replace(/[^\u0020-\u007E\n]/g, ''); // Preserve standard ASCII range and newlines
-
-  // --- ERD-specific sanitization ---
-
-  // 1. Ensure relationship labels do NOT have quotes (e.g., : "owns" -> : owns)
-  //    and handle potential extra spaces around the colon and label.
-  //    Also ensures camelCase/PascalCase labels are not split by accidental spaces.
-  cleaned = cleaned.replace(/: *"?([a-zA-Z][a-zA-Z0-9_]*)"?/g, ': $1');
-
-  // 2. Remove quotes around cardinalities if they appear (e.g., "||--o{" -> ||--o{)
-  //    Mermaid ERD cardinalities generally should not be quoted.
-  //    This regex targets common Mermaid cardinality patterns.
-  cleaned = cleaned.replace(/"(\|\|--\|\||\|\|--o\}|\}o--\|\||\}o--o\{)"/g, '$1');
-
-  // 3. Remove any leading/trailing visibility modifiers (+/-) which are not used in ERD
-  //    This is more common in Class Diagrams but good to include as a safeguard.
-  cleaned = cleaned.replace(/^\s*[+-]\s*/gm, '');
-
-  // 4. Ensure attribute types are simple (int, string) and not complex types or arrays.
-  //    The prompt specified 'string' or 'int'. This regex removes anything beyond.
-  //    NOTE: This is a complex one and might need fine-tuning based on *actual* bad output
-  //    If the model sometimes adds things like 'string[]' or 'json', this can help.
-  //    Example: `attributeName string[].`  -> `attributeName.`
-  //    It targets attribute lines with a known type.
-  cleaned = cleaned.replace(/^( *[a-zA-Z0-9_]+) (int|string)\s*(\S.*)?$/gm, '$1 $2$3'); // Keeps type but removes extra spaces if any
-
-  return cleaned;
-}
-
-/* TO DELETE
-// In your frontend JavaScript:
-const rawMermaidOutput = "**Class Diagram (Mermaid)**\n```classDiagram\n    class PrivateBankingClientPortal {\n        clientId\n        sessionToken\n        viewPortfolio()\n        executeTrade()\n    }\n    class MobileBankingApp {\n        deviceId\n        pushToken\n        checkBalance()\n        transferFunds()\n    }\n    class OnlineBankingPortal {\n        userId\n        lastLogin\n        payBill()\n        viewStatements()\n    }\n    class EnterpriseEventingPlatform {\n        topicName\n        eventPayload\n        publishEvent()\n        subscribeToTopic()\n    }\n    class APIGateway {\n        apiKey\n        requestPath\n        routeRequest()\n        authenticate()\n    }\n    class RealtimeDataIntegrationService {\n        sourceSystem\n        targetSystem\n        streamData()\n        transformRecord()\n    }\n    class PartyLifecycleManagementSystem {\n        partyId\n        partyStatus\n        createParty()\n        updatePartyDetails()\n    }\n    class DigitalOnboardingPlatformBusiness {\n        applicationId\n        onboardingStatus\n        initiateOnboarding()\n        verifyDocuments()\n    }\n    class CustomerOnboardingSystemRetail {\n        customerId\n        applicationData\n        processRetailApplication()\n        approveCustomer()\n    }\n    class IdentityProofingServiceExternal {\n        verificationId\n        result\n        verifyIdentity()\n        checkSanctionsList()\n    }\n    class KYCCDDPlatform {\n        caseId\n        riskScore\n        performKYC()\n        runCDD()\n    }\n    class CustomerDataPrivacyManagement {\n        consentId\n        dataSubjectId\n        manageConsent()\n        anonymizeData()\n    }\n    class GlobalCustomerIDRegistry {\n        globalCustomerId\n        masterRecord\n        resolveCustomerId()\n        mergeDuplicates()\n    }\n    class CRMBusinessPrivateBanking {\n        clientId\n        relationshipManager\n        logInteraction()\n        viewClient360()\n    }\n    class CRMRetailPersonalBanking {\n        customerId\n        customerSegment\n        updateCustomerProfile()\n        trackCampaignResponse()\n    }\n    class DigitalCustomerEngagementPlatform {\n        campaignId\n        targetAudience\n        sendNotification()\n        trackEngagement()\n    }\n    class AutomatedCustomerOutreachPlatform {\n        outreachId\n        channel\n        triggerCommunication()\n        trackResponse()\n    }\n    class AIDrivenCustomerServiceBot {\n        conversationId\n        intent\n        answerQuery()\n        escalateToAgent()\n    }\n    class ChatbotforCorporateSupport {\n        ticketId\n        corporateClientId\n        provideSupport()\n        logIssue()\n    }\n\n    PrivateBankingClientPortal --> APIGateway : usesAPI\n    MobileBankingApp --> APIGateway : usesAPI\n    OnlineBankingPortal --> APIGateway : usesAPI\n    APIGateway --> DigitalOnboardingPlatformBusiness : routesTo\n    APIGateway --> CustomerOnboardingSystemRetail : routesTo\n    APIGateway --> AutomatedCustomerOutreachPlatform : triggers\n    EnterpriseEventingPlatform --> RealtimeDataIntegrationService : pushesEvent\n    RealtimeDataIntegrationService --> PartyLifecycleManagementSystem : streamsData\n    DigitalOnboardingPlatformBusiness --> PartyLifecycleManagementSystem : publishesEvent\n    DigitalOnboardingPlatformBusiness --> IdentityProofingServiceExternal : callsAPI\n    CustomerOnboardingSystemRetail --> PartyLifecycleManagementSystem : publishesEvent\n    CustomerOnboardingSystemRetail --> IdentityProofingServiceExternal : callsAPI\n    PartyLifecycleManagementSystem --> GlobalCustomerIDRegistry : syncsViaEvent\n    PartyLifecycleManagementSystem --> CRMBusinessPrivateBanking : updatesViaAPI\n    PartyLifecycleManagementSystem --> CRMRetailPersonalBanking : syncsViaEvent\n    PartyLifecycleManagementSystem --> KYCCDDPlatform : triggersViaEvent\n    GlobalCustomerIDRegistry --> CRMBusinessPrivateBanking : providesData\n    KYCCDDPlatform --> CustomerDataPrivacyManagement : callsAPI\n    CRMBusinessPrivateBanking --> DigitalCustomerEngagementPlatform : feedsData\n    CRMRetailPersonalBanking --> DigitalCustomerEngagementPlatform : feedsData\n    DigitalCustomerEngagementPlatform --> AIDrivenCustomerServiceBot : powers\n    DigitalCustomerEngagementPlatform --> ChatbotforCorporateSupport : powers\n```\n\n"; // Get this from your backend response
-const rawDataModelOutput = "**Data Model (Mermaid ERD)**\n```erDiagram\n    Customer {\n        int CustomerID PK\n        string GlobalID\n        string CustomerType\n        string Status\n        string CreatedAt\n        string UpdatedAt\n    }\n    Account {\n        int AccountID PK\n        int CustomerID FK\n        string AccountNumber\n        string AccountType\n        string Balance\n        string Status\n    }\n    OnboardingApplication {\n        int ApplicationID PK\n        string Channel\n        string Status\n        string SubmittedAt\n        string ApprovedAt\n        string CreatedBy\n    }\n    IdentityVerification {\n        int VerificationID PK\n        int ApplicationID FK\n        string Provider\n        string Result\n        string CheckedAt\n        string TransactionID\n    }\n    UserSession {\n        int SessionID PK\n        int CustomerID FK\n        string Channel\n        string DeviceInfo\n        string StartTime\n        string EndTime\n    }\n    Consent {\n        int ConsentID PK\n        int CustomerID FK\n        string ConsentType\n        string Status\n        string GrantedAt\n        string ExpiresAt\n    }\n    CustomerSegment {\n        int SegmentID PK\n        string SegmentName\n        string Criteria\n        string CreatedAt\n    }\n    ApiLog {\n        int LogID PK\n        string RequestID\n        string Endpoint\n        string SourceSystem\n        string Timestamp\n        int StatusCode\n    }\n    EventLog {\n        int EventID PK\n        string EventType\n        string Topic\n        string Producer\n        string Timestamp\n        string Payload\n    }\n    AuditLog {\n        int AuditID PK\n        string EntityName\n        string EntityID\n        string Action\n        string ChangedBy\n        string Timestamp\n    }\n    DataPolicy {\n        int PolicyID PK\n        string PolicyName\n        string RuleDefinition\n        string IsActive\n        string CreatedAt\n    }\n    DataLineage {\n        int LineageID PK\n        string SourceSystem\n        string TargetSystem\n        string TransformationLogic\n        string UpdatedAt\n    }\n\n    Customer ||--o{ Account : has\n    Customer ||--o{ OnboardingApplication : appliesThrough\n    OnboardingApplication ||--|| IdentityVerification : requires\n    Customer ||--o{ UserSession : initiates\n    Customer ||--o{ Consent : gives\n    Customer }o--|| CustomerSegment : belongsTo\n    OnboardingApplication }o--o{ Customer : creates\n```";
-const sanitizedMermaidOutput = sanitizeMermaidClassDiagram(rawMermaidOutput);
-const sanitizedDataModelOutput = sanitizeMermaidERDiagram(rawDataModelOutput);
-
-console.log("--- Raw Output CLASS DIAGRAM(for inspection in console) ---");
-console.log(rawMermaidOutput); // Look for the ' ' characters if your console reveals them
-console.log("--- Raw Output DATA MODEL (for inspection in console) ---");
-console.log(rawDataModelOutput); // Look for the ' ' characters if your console reveals them
-
-console.log("--- Sanitized Output (repr-like for inspection) ---");
-// Simulate repr() in JavaScript (less direct than Python, but helpful)
-console.log(JSON.stringify(sanitizedMermaidOutput)); // This will escape non-ASCII, so you'd see \u00A0 if present
-console.log(JSON.stringify(sanitizedDataModelOutput));
-
-// Also log it as a raw string to check visual formatting
-console.log("--- Sanitized Output (Raw String) ---");
-console.log(sanitizedMermaidOutput);
-console.log(sanitizedDataModelOutput);
-
-// Then pass sanitizedMermaidOutput to your Mermaid renderer
-*/
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("upload");
@@ -187,10 +82,6 @@ export default function App() {
   const [edges, setEdges] = useState([]);
   const [nodes, setNodes] = useState([]);
   const [confluenceUrl, setConfluenceUrl] = useState("");
-  /* Class diagram and data model */
-  const [classDiagram, setClassDiagram] = useState("");
-  const [dataModel, setDataModel] = useState("");
-
   /* View diagram const definitions*/
   const [archName, setArchName] = useState('');
   const [archSuggestions, setArchSuggestions] = useState([]);
@@ -475,8 +366,6 @@ export default function App() {
       setLoading(true);
       // Clear existing outputs before new upload
       setMermaidCode('');
-      setClassDiagram('');
-      setDataModel('');
       setSummary('');
       setDescription('');
       setPros([]);
@@ -485,7 +374,7 @@ export default function App() {
       setNodes([]);
       setComplexityTable([]);
       const res= await axios.post("http://localhost:7001/upload/", formData, {headers: { "Content-Type": "multipart/form-data" },});
-      const { mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons, class_diagram, data_model } = res.data;
+      const { mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons } = res.data;
       const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
       setMermaidCode(String(cleanCode));
       setSummary(summary);
@@ -495,8 +384,6 @@ export default function App() {
       setComplexityTable(complexity_table || []);
       setPros(pros || []);
       setCons(cons || []);
-      setClassDiagram(class_diagram || "");
-      setDataModel(data_model || "");
       // Clear input fields after successful import
         setImage(null);
         setDiagramName('');
@@ -527,8 +414,6 @@ export default function App() {
         setLoading(true);
         // Clear existing outputs before new import
         setMermaidCode('');
-        setClassDiagram('');
-        setDataModel('');
         setSummary('');
         setDescription('');
         setPros([]);
@@ -541,7 +426,7 @@ export default function App() {
             headers: { "Content-Type": "multipart/form-data" },
         });
 
-        const { mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons, class_diagram, data_model } = res.data;
+        const { mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons } = res.data;
 
         const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
 
@@ -553,8 +438,6 @@ export default function App() {
         setComplexityTable(complexity_table || []);
         setPros(pros || []);
         setCons(cons || []);
-        setClassDiagram(class_diagram || "");
-        setDataModel(data_model || "");
 
         // Clear input fields after successful import
         setConfluenceUrl('');
@@ -580,8 +463,6 @@ export default function App() {
     try {
       // Clear all other states except mermaidCode
       setMermaidCode('');
-      setClassDiagram('');
-      setDataModel('');
       setSummary('');
       setDescription('');
       setPros([]);
@@ -591,7 +472,7 @@ export default function App() {
       setComplexityTable([]);
 
       const res= await axios.get("http://localhost:7001/get_arch_code", { params: { arch_name: archName }});
-      const { arch_name, mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons, class_diagram, data_model } = res.data;
+      const { arch_name, mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons } = res.data;
       const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
       setArchName(arch_name);
       setMermaidCode(String(cleanCode));
@@ -602,9 +483,6 @@ export default function App() {
       setComplexityTable(complexity_table || []);
       setPros(pros || []);
       setCons(cons || []);
-      setClassDiagram(class_diagram || "");
-      setDataModel(data_model || "");
-
     } catch (err) {
       console.error("Architecture loading failed:", err);
       alert("Architecture loading failed. Check console.");
@@ -1143,52 +1021,6 @@ export default function App() {
                                         ))}
                                     </tbody>
                                 </table>
-                            </>
-                        )}
-
-                        {classDiagram && (
-                            <>
-                                <h3>Class Diagram</h3>
-                                <MermaidRenderer chart={sanitizeMermaidClassDiagram(classDiagram)} />
-                            </>
-                        )}
-
-                        {dataModel && (
-                            <>
-                                <h3>Data Model</h3>
-                                <MermaidRenderer chart={sanitizeMermaidERDiagram(dataModel)} />
-                                {dataModel && (
-                                  <button className="primary-button"
-                                    onClick={() => {
-                                      const newWindow = window.open("", "_blank");
-                                      const html = `
-                                        <html>
-                                        <head>
-                                          <title>Data Model</title>
-                                          <script type="module">
-                                            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-                                            mermaid.initialize({ startOnLoad: true });
-                                          </script>
-                                          <style>
-                                            body { margin: 0; padding: 1rem; font-family: sans-serif; background: #f9f9f9; }
-                                            .mermaid { width: 100%; }
-                                          </style>
-                                        </head>
-                                        <body>
-                                          <div class="mermaid">
-                                            ${sanitizeMermaidERDiagram(dataModel)}
-                                          </div>
-                                        </body>
-                                        </html>
-                                      `;
-                                      newWindow.document.write(html);
-                                      newWindow.document.close();
-                                    }}
-                                    style={{ marginTop: '1rem' }}
-                                  >
-                                    View Data Model in new tab
-                                  </button>
-                                )}
                             </>
                         )}
                     </div>
