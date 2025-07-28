@@ -414,7 +414,7 @@ The output must contain one clearly separated block per application, using the s
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- Bulk Upload --- #
+# --- Bulk Upload ---  #
 
 @app.post("/bulk_upload/")
 def bulk_upload_image():
