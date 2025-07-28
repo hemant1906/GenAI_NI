@@ -59,7 +59,7 @@ def upload_image(image: UploadFile, diagram_name: str = Form(...), asset_id: str
         if asset_id.strip() == "":
             asset_id = "APP001"
 
-
+        '''
         # Structured Gemini Prompt
         prompt = """
         You are an expert Enterprise Architect. Analyze the provided system architecture diagram. From the diagram, extract the following:
@@ -255,7 +255,7 @@ The output must contain one clearly separated block per application, using the s
         print('Entered')
         with open("new_test_response_core_asset_APP001.json", "r") as f:
             result = json.load(f)
-        '''
+
 
         print('loaded')
 
