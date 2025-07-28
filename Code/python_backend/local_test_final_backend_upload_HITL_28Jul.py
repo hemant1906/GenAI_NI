@@ -414,6 +414,25 @@ The output must contain one clearly separated block per application, using the s
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- Human In The Loop - Update Summary and Description --- #
+
+@app.post("/update_summary_description/")
+def update_summary_description(payload: dict = Body(...)):
+    try:
+        diagram_id = payload["diagram_id"]
+        summary = payload["summary"]
+        description = payload["description"]
+        # Set pros and cons to empty so they are preserved in store_diagram_summary
+        pros = []
+        cons = []
+
+        # Overwrite existing summary & description
+        store_diagram_summary(diagram_id, "", summary, description, pros, cons)
+
+        return {"status": "updated", "message": "Summary and description updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # --- Bulk Upload ---  #
 
 @app.post("/bulk_upload/")
