@@ -195,6 +195,43 @@ export default function App() {
   const [archName, setArchName] = useState('');
   const [archSuggestions, setArchSuggestions] = useState([]);
 
+  /* Adding wait for sections in output from AaCAgent */
+  const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const [showPros, setShowPros] = useState(false);
+  const [showCons, setShowCons] = useState(false);
+  const [showClassDiagram, setShowClassDiagram] = useState(false);
+  const [showDataModel, setShowDataModel] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === "upload") {
+        setShowPros(false);
+        setShowCons(false);
+        setShowClassDiagram(false);
+        setShowDataModel(false);
+    }
+    const revealSections = async () => {
+      if (pros.length > 0) {
+        await wait(500); // show after 0.5 sec
+        setShowPros(true);
+      }
+      if (cons.length > 0) {
+        await wait(500);
+        setShowCons(true);
+      }
+      if (classDiagram) {
+        await wait(1500);
+        setShowClassDiagram(true);
+      }
+      if (dataModel) {
+        await wait(1500);
+        setShowDataModel(true);
+      }
+    };
+
+    revealSections();
+  }, [activeTab, pros, cons, classDiagram, dataModel]);
+
   // Chat States
     const [sessionId, setSessionId] = useState("");
     const [query, setQuery] = useState("");
@@ -281,6 +318,8 @@ export default function App() {
                 'target-arrow-color': '#000',
                 'width': 2,
                 'font-size': '8px',
+                'text-wrap': 'wrap',            // ✅ enables wrapping
+                'text-max-width': 5,
                 'text-background-color': '#fff',
                 'text-background-opacity': 1,
                 'text-background-padding': '2px'
@@ -300,6 +339,7 @@ export default function App() {
         const sourceLabel = `${item.n.id}: ${item.n.name}`;
         const targetLabel = `${item.m.id}: ${item.m.name}`;
         const edgeId = `${source}-${target}-${relType}`;
+        const reflink = item.r[3]?.reflink;
 
         if (!addedNodes.has(source)) {
           cy.add({ data: { id: source, label: sourceLabel, trueId: item.n.id } });
@@ -310,7 +350,7 @@ export default function App() {
           addedNodes.add(target);
         }
         if (!addedEdges.has(edgeId)) {
-            cy.add({ data: { id: edgeId, source, target, sourceLabel, targetLabel, label: relType } });
+            cy.add({ data: { id: edgeId, source, target, sourceLabel, targetLabel, label: relType, reflink } });
             addedEdges.add(edgeId);
         }
       });
@@ -334,6 +374,61 @@ export default function App() {
                     console.error('Failed to fetch diagram info:', err);
                 }
             });
+
+      cy.on('tap', 'edge', (event) => {
+              const reflink = event.target.data('reflink');
+              if (reflink) {
+                window.open(reflink, '_blank'); // Open in new tab
+              }
+      });
+
+        let tooltip = null;
+        let moveListener = null;
+
+        cy.on('mouseover', 'edge', (event) => {
+          const edge = event.target;
+          const reflink = edge.data('reflink');
+
+          if (!reflink) return;
+
+          // Clean up any existing tooltip
+          if (tooltip) tooltip.remove();
+
+          tooltip = document.createElement('div');
+          tooltip.innerText = reflink;
+          tooltip.style.position = 'absolute';
+          tooltip.style.background = '#fff';
+          tooltip.style.border = '1px solid #000';
+          tooltip.style.padding = '6px';
+          tooltip.style.fontSize = '12px';
+          tooltip.style.maxWidth = '300px';
+          tooltip.style.wordWrap = 'break-word';
+          tooltip.style.zIndex = 9999;
+          tooltip.style.pointerEvents = 'none';
+          tooltip.id = 'cy-tooltip';
+          document.body.appendChild(tooltip);
+
+          moveListener = (e) => {
+            if (tooltip) {
+              tooltip.style.left = e.pageX + 10 + 'px';
+              tooltip.style.top = e.pageY + 10 + 'px';
+            }
+          };
+
+          document.addEventListener('mousemove', moveListener);
+        });
+
+        cy.on('mouseout', 'edge', () => {
+          if (tooltip) {
+            tooltip.remove();
+            tooltip = null;
+          }
+
+          if (moveListener) {
+            document.removeEventListener('mousemove', moveListener);
+            moveListener = null;
+          }
+        });
     }
   }, [graphResults]);
 
@@ -484,6 +579,8 @@ export default function App() {
       setEdges([]);
       setNodes([]);
       setComplexityTable([]);
+      setShowClassDiagram(false);
+      setShowDataModel(false);
       const res= await axios.post("http://localhost:7001/upload/", formData, {headers: { "Content-Type": "multipart/form-data" },});
       const { mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons, class_diagram, data_model } = res.data;
       const cleanCode = Array.isArray(mermaid_code) ? mermaid_code[0] : mermaid_code;
@@ -536,6 +633,8 @@ export default function App() {
         setEdges([]);
         setNodes([]);
         setComplexityTable([]);
+        setShowClassDiagram(false);
+        setShowDataModel(false);
 
         const res = await axios.post("http://localhost:7001/process_confluence/", formData, {
             headers: { "Content-Type": "multipart/form-data" },
@@ -589,6 +688,8 @@ export default function App() {
       setEdges([]);
       setNodes([]);
       setComplexityTable([]);
+      setShowClassDiagram(false);
+      setShowDataModel(false);
 
       const res= await axios.get("http://localhost:7001/get_arch_code", { params: { arch_name: archName }});
       const { arch_name, mermaid_code, summary, description, nodes, edges, complexity_table, pros, cons, class_diagram, data_model } = res.data;
@@ -1038,66 +1139,6 @@ export default function App() {
                             </>
                         )}
 
-                        {summary && (
-                            <>
-                                <h3>Summary</h3>
-                                <p>{summary}</p>
-                            </>
-                        )}
-
-                        {description && (
-                            <>
-                                <h3>Description</h3>
-                                <p>{description}</p>
-                            </>
-                        )}
-
-                        {complexityTable.length > 0 && (
-                            <>
-                                <h3>System Complexity Table</h3>
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Component</th>
-                                            <th>Complexity</th>
-                                            <th>Reason</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {complexityTable.map((entry, index) => (
-                                            <tr key={index}>
-                                                <td>{entry.component}</td>
-                                                <td>{entry.complexity}</td>
-                                                <td>{entry.reason}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </>
-                        )}
-
-                        {pros.length > 0 && (
-                            <>
-                                <h3>Pros</h3>
-                                <ul>
-                                    {pros.map((item, index) => (
-                                        <li key={index}>{item}</li>
-                                    ))}
-                                </ul>
-                            </>
-                        )}
-
-                        {cons.length > 0 && (
-                            <>
-                                <h3>Cons</h3>
-                                <ul>
-                                    {cons.map((item, index) => (
-                                        <li key={index}>{item}</li>
-                                    ))}
-                                </ul>
-                            </>
-                        )}
-
                         {edges.length > 0 && (
                             <>
                                 <h3>Integration Table</h3>
@@ -1146,16 +1187,76 @@ export default function App() {
                             </>
                         )}
 
-                        {classDiagram && (
+                        {summary && (
                             <>
-                                <h3>Class Diagram</h3>
-                                <MermaidRenderer chart={sanitizeMermaidClassDiagram(classDiagram)} />
+                                <h3>Derived Summary</h3>
+                                <p>{summary}</p>
                             </>
                         )}
 
-                        {dataModel && (
+                        {description && (
                             <>
-                                <h3>Data Model</h3>
+                                <h3>Derived Description</h3>
+                                <p>{description}</p>
+                            </>
+                        )}
+
+                        {complexityTable.length > 0 && (
+                            <>
+                                <h3>Derived System Complexity</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Component</th>
+                                            <th>Complexity</th>
+                                            <th>Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {complexityTable.map((entry, index) => (
+                                            <tr key={index}>
+                                                <td>{entry.component}</td>
+                                                <td>{entry.complexity}</td>
+                                                <td>{entry.reason}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </>
+                        )}
+
+                        {showPros && (
+                            <>
+                              <h3>Derived Pros</h3>
+                              <ul>
+                                {pros.map((item, index) => (
+                                  <li key={index}>{item}</li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+
+                        {showCons && (
+                            <>
+                              <h3>Derived Cons</h3>
+                              <ul>
+                                {cons.map((item, index) => (
+                                  <li key={index}>{item}</li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+
+                        {showClassDiagram && (
+                            <>
+                              <h3>Recommended Class Diagram</h3>
+                              <MermaidRenderer chart={sanitizeMermaidClassDiagram(classDiagram)} />
+                            </>
+                          )}
+
+                        {showDataModel && (
+                            <>
+                                <h3>Recommended Data Model</h3>
                                 <MermaidRenderer chart={sanitizeMermaidERDiagram(dataModel)} />
                                 {dataModel && (
                                   <button className="primary-button"

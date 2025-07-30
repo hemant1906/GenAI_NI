@@ -419,7 +419,7 @@ The output must contain one clearly separated block per application, using the s
 @app.post("/bulk_upload/")
 def bulk_upload_image():
     try:
-        for i in range(3, 10):  # range (x,y) -- x inclusive and y-1 inclusive
+        for i in range(2, 10):  # range (x,y) -- x inclusive and y-1 inclusive
             index = f"{i:03d}"  # formats 1 as '001', 2 as '002', ..., 9 as '009'
             asset_id = f"APP{index}"
             diagram_name = f"ARCH-{index}"
@@ -1332,7 +1332,7 @@ def query_graph(node_id: str = Query(...), type: str = Query("Upstream"), depth:
             for rel in path.relationships:
                 response.append({
                     "n": dict(rel.start_node),
-                    "r": [dict(rel.start_node), rel.type, dict(rel.end_node)],
+                    "r": [dict(rel.start_node), rel.type, dict(rel.end_node), {"reflink": rel.get("reflink")}],
                     "m": dict(rel.end_node)
                 })
 
@@ -1587,10 +1587,25 @@ def parse_mermaid(mermaid_code):
                 if not label:
                     label = "UNKNOWN"
 
+                # Normalize label for checking (case-insensitive)
+                label_upper = label.upper()
+
+                # Determine the correct base URL based on label
+                if label_upper == "API":
+                    base_url = "https://www.api-stargaze-url.com"
+                elif label_upper == "EVENT":
+                    base_url = "https://www.event-stargaze-url.com"
+                else:
+                    base_url = "https://www.others-stargaze-url.com"
+
+                # Build reflink
+                reflink = f"{base_url}/{src}-{tgt}"
+
                 edges.append({
                     "source": src,
                     "target": tgt,
-                    "label": label
+                    "label": label,
+                    "reflink": reflink
                 })
         print(nodes)
         print(edges)
@@ -1618,6 +1633,6 @@ def store_graph(tx, diagram_id, nodes, edges):
         tx.run(
             f"MATCH (a:Node {{id: $src, diagram_id: $diagram_id}}), (b:Node {{id: $tgt, diagram_id: $diagram_id}}) "
             f"MERGE (a)-[r:{edge['label'].upper()}]->(b)"
-            f"SET r.interface_type = $interface_type",
-            src=edge["source"], tgt=edge["target"], diagram_id=diagram_id, interface_type=edge['label'].upper()
+            f"SET r.interface_type = $interface_type, r.reflink = $reflink",
+            src=edge["source"], tgt=edge["target"], diagram_id=diagram_id, interface_type=edge['label'].upper(), reflink=edge['reflink']
         )
